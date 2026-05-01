@@ -1,10 +1,13 @@
+import fs from "fs";
+import path from "path";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   try {
-    const { systemPrompt, history } = req.body;
+    const { history } = req.body;
 
     const apiKey = process.env.DEEPSEEK_API_KEY;
 
@@ -14,30 +17,26 @@ export default async function handler(req, res) {
       });
     }
 
-    // 🔥 system強化（ここが肝）
-    const strongSystemPrompt = `
-あなたは必ず以下の設定に従うAIです。
+    // 🔥 txt読み込み
+    const filePath = path.join(process.cwd(), "aizawa.txt");
+    const systemPrompt = fs.readFileSync(filePath, "utf-8");
 
+    // 🔥 強制ルール付与
+    const strongSystem = `
 ${systemPrompt}
 
 【絶対ルール】
-・日本語以外は禁止
-・200〜400文字で返答する
+・日本語のみ
+・200〜400文字
 ・必ず会話を広げる
 ・必ず1つ質問を含める
 ・短文は禁止
-
-これらのルールに違反してはいけません。
 `;
 
-    // 🔥 history制限（暴走防止）
-    const trimmedHistory = (history || []).slice(-4);
-
-    // 🔥 systemを前後に挟む（最重要）
     const messages = [
-      { role: "system", content: strongSystemPrompt },
-      ...trimmedHistory,
-      { role: "system", content: "上記のルールを必ず守ってください。" }
+      { role: "system", content: strongSystem },
+      ...(history || []).slice(-4),
+      { role: "system", content: "上記ルールを守ってください。" }
     ];
 
     const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
@@ -49,7 +48,7 @@ ${systemPrompt}
       body: JSON.stringify({
         model: "deepseek-chat",
         messages,
-        temperature: 0.85,
+        temperature: 0.8,
         max_tokens: 500
       })
     });
