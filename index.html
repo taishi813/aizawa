@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>相澤仁美 AIチャット</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0f1115;
+  color: white;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 背景 */
+.bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: url("aizawa.jpg") center/cover no-repeat;
+  filter: blur(20px) brightness(0.4);
+  z-index: 0;
+}
+
+/* キャラ（縦長） */
+.character {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* チャット */
+.chat {
+  position: relative;
+  z-index: 2;
+  width: 45%;
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+}
+
+/* 吹き出し */
+.message {
+  max-width: 80%;
+  margin-bottom: 15px;
+  padding: 12px 16px;
+  border-radius: 18px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.user {
+  background: #ff4fa3;
+  margin-left: auto;
+}
+
+.ai {
+  background: rgba(255,255,255,0.1);
+}
+
+/* 入力 */
+.input-area {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  display: flex;
+  padding: 10px;
+  backdrop-filter: blur(10px);
+}
+
+textarea {
+  flex: 1;
+  resize: none;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+}
+
+button {
+  margin-left: 10px;
+  padding: 10px 15px;
+  background: #ff4fa3;
+  border: none;
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* ローディング */
+.loading {
+  opacity: 0.6;
+}
+</style>
+</head>
+
+<body>
+
+<div class="bg"></div>
+
+<img src="aizawa.png" class="character">
+
+<div id="chat" class="chat"></div>
+
+<div class="input-area">
+  <textarea id="input" rows="2" placeholder="メッセージ入力"></textarea>
+  <button id="sendBtn">送信</button>
+</div>
+
+<script>
+const chat = document.getElementById("chat");
+const input = document.getElementById("input");
+
+let history = [];
+
+function addMessage(text, type) {
+  const div = document.createElement("div");
+  div.className = "message " + type;
+  div.innerText = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+async function send() {
+  const text = input.value.trim();
+  if (!text) return;
+
+  addMessage(text, "user");
+  input.value = "";
+
+  history.push({ role: "user", content: text });
+  history = history.slice(-8);
+
+  const loading = document.createElement("div");
+  loading.className = "message ai loading";
+  loading.innerText = "考え中...";
+  chat.appendChild(loading);
+
+  try {
+    const res = await fetch("/api/deepseek", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        systemPrompt: `
+あなたは相澤仁美のような女性。
+少し余裕があり、色気と大人の魅力を感じさせる話し方。
+
+・日本語で話す
+・200〜400文字
+・必ず会話を広げる
+・質問を含める
+`,
+        history
+      })
+    });
+
+    const data = await res.json();
+    loading.remove();
+
+    if (!res.ok) {
+      addMessage("エラー: " + JSON.stringify(data), "ai");
+      return;
+    }
+
+    addMessage(data.reply, "ai");
+    history.push({ role: "assistant", content: data.reply });
+
+  } catch (e) {
+    loading.remove();
+    addMessage("通信エラー", "ai");
+  }
+}
+
+document.getElementById("sendBtn").onclick = send;
+
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+    e.preventDefault();
+    send();
+  }
+});
+</script>
+
+</body>
+</html>
