@@ -14,16 +14,30 @@ export default async function handler(req, res) {
       });
     }
 
+    // 🔥 system強化（ここが肝）
+    const strongSystemPrompt = `
+あなたは必ず以下の設定に従うAIです。
+
+${systemPrompt}
+
+【絶対ルール】
+・日本語以外は禁止
+・200〜400文字で返答する
+・必ず会話を広げる
+・必ず1つ質問を含める
+・短文は禁止
+
+これらのルールに違反してはいけません。
+`;
+
+    // 🔥 history制限（暴走防止）
+    const trimmedHistory = (history || []).slice(-4);
+
+    // 🔥 systemを前後に挟む（最重要）
     const messages = [
-      {
-        role: "system",
-        content: systemPrompt + `
-必ず日本語で返答すること。
-200〜400文字で会話を広げること。
-必ず1つ質問を含めること。
-短文禁止。`
-      },
-      ...history
+      { role: "system", content: strongSystemPrompt },
+      ...trimmedHistory,
+      { role: "system", content: "上記のルールを必ず守ってください。" }
     ];
 
     const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
@@ -35,7 +49,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: "deepseek-chat",
         messages,
-        temperature: 0.9,
+        temperature: 0.85,
         max_tokens: 500
       })
     });
