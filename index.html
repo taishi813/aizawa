@@ -31,19 +31,21 @@ body {
   bottom: 0;
   height: 100%;
   z-index: 1;
-  pointer-events: none; /* ←これ重要（UIを邪魔しない） */
+  pointer-events: none;
 }
 
-/* チャット領域 */
+/* チャット（高さ修正ここ） */
 .chat {
   position: fixed;
   left: 0;
   top: 0;
   width: 45%;
-  height: calc(100% - 80px);
+  height: calc(100% - 80px); /* ←ここ重要 */
   overflow-y: auto;
   padding: 20px;
   z-index: 2;
+
+  box-sizing: border-box;
 
   background: linear-gradient(
     to right,
@@ -72,7 +74,7 @@ body {
   background: rgba(255,255,255,0.15);
 }
 
-/* 入力エリア */
+/* 入力欄 */
 .input-area {
   position: fixed;
   bottom: 0;
@@ -83,12 +85,12 @@ body {
   align-items: center;
   padding: 10px;
   gap: 10px;
-  z-index: 999; /* ←最前面 */
+  z-index: 999;
 
   background: rgba(20,20,25,0.95);
 }
 
-/* textarea（ここが重要修正） */
+/* 入力 */
 textarea {
   flex: 1;
   height: 50px;
@@ -99,11 +101,8 @@ textarea {
 
   padding: 10px;
 
-  background: #ffffff; /* ←完全白 */
-  color: #000000;      /* ←完全黒 */
-  font-size: 14px;
-
-  z-index: 1000;
+  background: #fff;
+  color: #000;
 }
 
 /* ボタン */
@@ -114,14 +113,7 @@ button {
   border: none;
   background: #ff4fa3;
   color: white;
-  font-size: 14px;
   cursor: pointer;
-
-  z-index: 1000;
-}
-
-button:active {
-  opacity: 0.8;
 }
 </style>
 </head>
@@ -150,6 +142,8 @@ function addMessage(text, type) {
   div.className = "message " + type;
   div.textContent = text;
   chat.appendChild(div);
+
+  // 🔥 常に一番下へ
   chat.scrollTop = chat.scrollHeight;
 }
 
@@ -168,11 +162,24 @@ async function send() {
   loading.textContent = "考え中...";
   chat.appendChild(loading);
 
+  chat.scrollTop = chat.scrollHeight;
+
   try {
     const res = await fetch("/api/deepseek", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
+        systemPrompt: `
+あなたは相澤仁美のような女性。
+余裕と色気のある話し方。
+
+・日本語
+・200〜400文字
+・必ず会話を広げる
+・必ず質問を含める
+`,
         history
       })
     });
@@ -194,10 +201,8 @@ async function send() {
   }
 }
 
-/* ボタン */
-sendBtn.addEventListener("click", send);
+sendBtn.onclick = send;
 
-/* Enter送信（Shift+Enterで改行） */
 input.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
     e.preventDefault();
