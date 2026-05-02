@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>相澤仁美 AIチャット</title>
+<title>AIキャラチャット</title>
 
 <style>
 body {
@@ -34,18 +34,17 @@ body {
   pointer-events: none;
 }
 
-/* チャット（高さ修正ここ） */
+/* チャット */
 .chat {
   position: fixed;
   left: 0;
   top: 0;
   width: 45%;
-  height: calc(100% - 80px); /* ←ここ重要 */
+  height: calc(100% - 90px);
   overflow-y: auto;
   padding: 20px;
-  z-index: 2;
-
   box-sizing: border-box;
+  z-index: 2;
 
   background: linear-gradient(
     to right,
@@ -74,40 +73,62 @@ body {
   background: rgba(255,255,255,0.15);
 }
 
+/* 上部バー */
+.top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 45%;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 10px;
+  z-index: 3;
+
+  background: rgba(20,20,25,0.95);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+/* セレクト */
+select {
+  padding: 6px;
+  border-radius: 6px;
+  border: none;
+}
+
 /* 入力欄 */
 .input-area {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 45%;
-  height: 80px;
+  height: 90px;
   display: flex;
   align-items: center;
   padding: 10px;
   gap: 10px;
-  z-index: 999;
+  z-index: 3;
 
   background: rgba(20,20,25,0.95);
 }
 
-/* 入力 */
+/* テキスト */
 textarea {
   flex: 1;
-  height: 50px;
+  height: 60px;
   resize: none;
   border-radius: 10px;
   border: none;
   outline: none;
-
   padding: 10px;
-
   background: #fff;
   color: #000;
 }
 
 /* ボタン */
 button {
-  height: 50px;
+  height: 60px;
   padding: 0 18px;
   border-radius: 10px;
   border: none;
@@ -120,13 +141,24 @@ button {
 
 <body>
 
-<div class="bg"></div>
-<img src="aizawa.png" class="character">
+<div class="bg" id="bg"></div>
+<img src="aizawa.png" class="character" id="characterImg">
 
+<!-- 上部UI -->
+<div class="top-bar">
+  <select id="characterSelect">
+    <option value="aizawa">相澤仁美</option>
+    <option value="ogura">小倉優香</option>
+    <option value="kishi">岸明日香</option>
+  </select>
+</div>
+
+<!-- チャット -->
 <div id="chat" class="chat"></div>
 
+<!-- 入力 -->
 <div class="input-area">
-  <textarea id="input" placeholder="メッセージを入力"></textarea>
+  <textarea id="input" placeholder="メッセージ入力"></textarea>
   <button id="sendBtn">送信</button>
 </div>
 
@@ -135,18 +167,36 @@ const chat = document.getElementById("chat");
 const input = document.getElementById("input");
 const sendBtn = document.getElementById("sendBtn");
 
+const characterSelect = document.getElementById("characterSelect");
+const characterImg = document.getElementById("characterImg");
+const bg = document.getElementById("bg");
+
 let history = [];
 
+/* キャラ変更 */
+function changeCharacter() {
+  const char = characterSelect.value;
+
+  characterImg.src = char + ".png";
+  bg.style.backgroundImage = `url(${char}.jpg)`;
+
+  // 会話リセット（任意）
+  history = [];
+  chat.innerHTML = "";
+}
+
+characterSelect.addEventListener("change", changeCharacter);
+
+/* メッセージ追加 */
 function addMessage(text, type) {
   const div = document.createElement("div");
   div.className = "message " + type;
   div.textContent = text;
   chat.appendChild(div);
-
-  // 🔥 常に一番下へ
   chat.scrollTop = chat.scrollHeight;
 }
 
+/* 送信 */
 async function send() {
   const text = input.value.trim();
   if (!text) return;
@@ -155,32 +205,25 @@ async function send() {
   input.value = "";
 
   history.push({ role: "user", content: text });
-  history = history.slice(-8);
+  history = history.slice(-6);
 
   const loading = document.createElement("div");
   loading.className = "message ai";
   loading.textContent = "考え中...";
   chat.appendChild(loading);
-
   chat.scrollTop = chat.scrollHeight;
 
   try {
+    const character = characterSelect.value;
+
     const res = await fetch("/api/deepseek", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        systemPrompt: `
-あなたは相澤仁美のような女性。
-余裕と色気のある話し方。
-
-・日本語
-・200〜400文字
-・必ず会話を広げる
-・必ず質問を含める
-`,
-        history
+        history,
+        character
       })
     });
 
@@ -201,6 +244,7 @@ async function send() {
   }
 }
 
+/* イベント */
 sendBtn.onclick = send;
 
 input.addEventListener("keydown", (e) => {
