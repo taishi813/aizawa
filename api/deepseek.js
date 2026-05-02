@@ -7,36 +7,29 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { history } = req.body;
+    const { history, character } = req.body;
 
     const apiKey = process.env.DEEPSEEK_API_KEY;
 
-    if (!apiKey) {
-      return res.status(500).json({
-        error: "DEEPSEEK_API_KEY が設定されていません"
-      });
-    }
+    const fileName = character || "aizawa";
+    const filePath = path.join(process.cwd(), `${fileName}.txt`);
 
-    // 🔥 txt読み込み
-    const filePath = path.join(process.cwd(), "aizawa.txt");
     const systemPrompt = fs.readFileSync(filePath, "utf-8");
 
-    // 🔥 強制ルール付与
     const strongSystem = `
 ${systemPrompt}
 
 【絶対ルール】
-・日本語のみ
+・日本語
 ・200〜400文字
 ・必ず会話を広げる
-・必ず1つ質問を含める
-・短文は禁止
+・必ず質問を含める
 `;
 
     const messages = [
       { role: "system", content: strongSystem },
       ...(history || []).slice(-4),
-      { role: "system", content: "上記ルールを守ってください。" }
+      { role: "system", content: "必ず守ること" }
     ];
 
     const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
@@ -48,19 +41,13 @@ ${systemPrompt}
       body: JSON.stringify({
         model: "deepseek-chat",
         messages,
-        temperature: 0.8,
-        max_tokens: 500
+        temperature: 0.8
       })
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
-      return res.status(500).json({ error: data });
-    }
-
-    const reply =
-      data?.choices?.[0]?.message?.content || "（返答なし）";
+    const reply = data?.choices?.[0]?.message?.content || "";
 
     res.status(200).json({ reply });
 
