@@ -22,7 +22,7 @@ body {
   overflow: hidden;
 }
 
-/* 🎬 黒帯（映画風） */
+/* 🎬 黒帯 */
 body::before,
 body::after{
   content:"";
@@ -93,15 +93,19 @@ select {
     rgba(10,10,12,0.7),
     rgba(10,10,12,0)
   );
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* メッセージ */
 .message {
   max-width: 85%;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   padding: 12px 16px;
-  border-radius: 18px;
-  line-height: 1.6;
+  border-radius: 16px;
+  line-height: 1.8;
+  font-size: 15px;
+  word-break: break-word;
   white-space: pre-wrap;
 }
 
@@ -111,7 +115,8 @@ select {
 }
 
 .ai {
-  background: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(6px);
 }
 
 /* 入力 */
@@ -132,6 +137,7 @@ textarea {
   padding: 10px;
   background: #fff;
   color: #000;
+  font-size: 16px;
 }
 
 button {
@@ -143,13 +149,53 @@ button {
   cursor: pointer;
 }
 
-/* スクロール美化 */
+/* スクロール */
 .chat::-webkit-scrollbar {
   width: 6px;
 }
 .chat::-webkit-scrollbar-thumb {
   background: rgba(255,255,255,0.2);
   border-radius: 3px;
+}
+
+/* 📱 スマホ最適化 */
+@media (max-width: 768px){
+
+  body::before,
+  body::after{
+    height: 40px;
+  }
+
+  .left-panel{
+    width: 100%;
+    top: 40px;
+    bottom: 40px;
+  }
+
+  .character{
+    opacity: 0.25;
+    max-width: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .chat{
+    padding: 12px;
+  }
+
+  .message{
+    max-width: 95%;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+
+  textarea{
+    height: 50px;
+  }
+
+  button{
+    width: 70px;
+  }
 }
 </style>
 </head>
@@ -199,6 +245,16 @@ characterSelect.addEventListener("change", () => {
   chat.innerHTML = "";
 });
 
+/* ログ削減 */
+function trimChat(){
+  const messages = chat.querySelectorAll(".message");
+  if(messages.length > 30){
+    for(let i = 0; i < 10; i++){
+      messages[i].remove();
+    }
+  }
+}
+
 /* メッセージ */
 function addMessage(text, type){
   const div = document.createElement("div");
@@ -206,6 +262,8 @@ function addMessage(text, type){
   div.textContent = text;
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
+
+  trimChat();
 }
 
 /* 送信 */
