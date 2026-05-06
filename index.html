@@ -3,24 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AIキャラチャット</title>
+<title>Cinematic AI Chat</title>
 
 <style>
+:root{
+  --panel: rgba(10,10,12,0.88);
+  --accent: #ff4fa3;
+}
+
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #0f1115;
+  background: black;
   color: white;
   height: 100vh;
   overflow: hidden;
 }
+
+/* 🎬 黒帯（映画風） */
+body::before,
+body::after{
+  content:"";
+  position: fixed;
+  left:0;
+  width:100%;
+  height:70px;
+  background:black;
+  z-index:10;
+}
+body::before{ top:0; }
+body::after{ bottom:0; }
 
 /* 背景 */
 .bg {
   position: fixed;
   inset: 0;
   background: url("aizawa.jpg") center/cover no-repeat;
-  filter: blur(18px) brightness(0.4);
+  filter: brightness(0.45) blur(10px);
   z-index: 0;
 }
 
@@ -30,34 +51,54 @@ body {
   right: 0;
   bottom: 0;
   height: 100%;
+  max-width: 55%;
+  object-fit: contain;
   z-index: 1;
   pointer-events: none;
 }
 
+/* 左パネル */
+.left-panel {
+  position: fixed;
+  top: 70px;
+  bottom: 70px;
+  left: 0;
+  width: 45%;
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+}
+
+/* 上バー */
+.top-bar {
+  height: 50px;
+  padding: 8px;
+  background: var(--panel);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+select {
+  padding: 6px;
+  border-radius: 6px;
+}
+
 /* チャット */
 .chat {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 45%;
-  height: calc(100% - 90px);
+  flex: 1;
   overflow-y: auto;
-  padding: 20px;
-  box-sizing: border-box;
-  z-index: 2;
-
+  padding: 15px;
   background: linear-gradient(
     to right,
-    rgba(20,20,25,0.95),
-    rgba(20,20,25,0.8),
-    rgba(20,20,25,0)
+    rgba(10,10,12,0.95),
+    rgba(10,10,12,0.7),
+    rgba(10,10,12,0)
   );
 }
 
 /* メッセージ */
 .message {
-  max-width: 80%;
-  margin-bottom: 15px;
+  max-width: 85%;
+  margin-bottom: 12px;
   padding: 12px 16px;
   border-radius: 18px;
   line-height: 1.6;
@@ -65,55 +106,22 @@ body {
 }
 
 .user {
-  background: #ff4fa3;
+  background: var(--accent);
   margin-left: auto;
 }
 
 .ai {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.12);
 }
 
-/* 上部バー */
-.top-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 45%;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  gap: 10px;
-  z-index: 3;
-
-  background: rgba(20,20,25,0.95);
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-/* セレクト */
-select {
-  padding: 6px;
-  border-radius: 6px;
-  border: none;
-}
-
-/* 入力欄 */
+/* 入力 */
 .input-area {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 45%;
-  height: 90px;
   display: flex;
-  align-items: center;
   padding: 10px;
   gap: 10px;
-  z-index: 3;
-
-  background: rgba(20,20,25,0.95);
+  background: var(--panel);
 }
 
-/* テキスト */
 textarea {
   flex: 1;
   height: 60px;
@@ -126,15 +134,22 @@ textarea {
   color: #000;
 }
 
-/* ボタン */
 button {
-  height: 60px;
-  padding: 0 18px;
+  width: 80px;
   border-radius: 10px;
   border: none;
-  background: #ff4fa3;
+  background: var(--accent);
   color: white;
   cursor: pointer;
+}
+
+/* スクロール美化 */
+.chat::-webkit-scrollbar {
+  width: 6px;
+}
+.chat::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 3px;
 }
 </style>
 </head>
@@ -142,24 +157,25 @@ button {
 <body>
 
 <div class="bg" id="bg"></div>
-<img src="aizawa.png" class="character" id="characterImg">
+<img id="characterImg" class="character" src="aizawa.png">
 
-<!-- 上部UI -->
-<div class="top-bar">
-  <select id="characterSelect">
-    <option value="aizawa">相澤仁美</option>
-    <option value="ogura">小倉優香</option>
-    <option value="kishi">岸明日香</option>
-  </select>
-</div>
+<div class="left-panel">
 
-<!-- チャット -->
-<div id="chat" class="chat"></div>
+  <div class="top-bar">
+    <select id="characterSelect">
+      <option value="aizawa">相澤仁美</option>
+      <option value="ogura">小倉優香</option>
+      <option value="kishi">岸明日香</option>
+    </select>
+  </div>
 
-<!-- 入力 -->
-<div class="input-area">
-  <textarea id="input" placeholder="メッセージ入力"></textarea>
-  <button id="sendBtn">送信</button>
+  <div id="chat" class="chat"></div>
+
+  <div class="input-area">
+    <textarea id="input" placeholder="メッセージ入力"></textarea>
+    <button id="sendBtn">送信</button>
+  </div>
+
 </div>
 
 <script>
@@ -173,22 +189,18 @@ const bg = document.getElementById("bg");
 
 let history = [];
 
-/* キャラ変更 */
-function changeCharacter() {
+/* キャラ切替 */
+characterSelect.addEventListener("change", () => {
   const char = characterSelect.value;
-
   characterImg.src = char + ".png";
   bg.style.backgroundImage = `url(${char}.jpg)`;
 
-  // 会話リセット（任意）
   history = [];
   chat.innerHTML = "";
-}
+});
 
-characterSelect.addEventListener("change", changeCharacter);
-
-/* メッセージ追加 */
-function addMessage(text, type) {
+/* メッセージ */
+function addMessage(text, type){
   const div = document.createElement("div");
   div.className = "message " + type;
   div.textContent = text;
@@ -197,62 +209,58 @@ function addMessage(text, type) {
 }
 
 /* 送信 */
-async function send() {
+async function send(){
   const text = input.value.trim();
-  if (!text) return;
+  if(!text) return;
 
   addMessage(text, "user");
   input.value = "";
 
-  history.push({ role: "user", content: text });
+  history.push({ role:"user", content:text });
   history = history.slice(-6);
 
   const loading = document.createElement("div");
   loading.className = "message ai";
-  loading.textContent = "考え中...";
+  loading.textContent = "…";
   chat.appendChild(loading);
   chat.scrollTop = chat.scrollHeight;
 
   try {
-    const character = characterSelect.value;
-
     const res = await fetch("/api/deepseek", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({
         history,
-        character
+        character: characterSelect.value
       })
     });
 
     const data = await res.json();
     loading.remove();
 
-    if (!res.ok) {
-      addMessage("エラー: " + JSON.stringify(data), "ai");
+    if(!res.ok){
+      addMessage("エラー", "ai");
       return;
     }
 
     addMessage(data.reply, "ai");
-    history.push({ role: "assistant", content: data.reply });
+    history.push({ role:"assistant", content:data.reply });
 
-  } catch (e) {
+  } catch(e){
     loading.remove();
     addMessage("通信エラー", "ai");
   }
 }
 
-/* イベント */
-sendBtn.onclick = send;
-
-input.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+/* Enter送信 */
+input.addEventListener("keydown", e=>{
+  if(e.key==="Enter" && !e.shiftKey && !e.isComposing){
     e.preventDefault();
     send();
   }
 });
+
+sendBtn.onclick = send;
 </script>
 
 </body>
