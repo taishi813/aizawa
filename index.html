@@ -11,190 +11,235 @@
   --accent: #ff4fa3;
 }
 
-* { box-sizing: border-box; }
+*{
+  box-sizing:border-box;
+}
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: black;
-  color: white;
-  height: 100vh;
-  overflow: hidden;
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  background:black;
+  color:white;
+  height:100vh;
+  overflow:hidden;
 }
 
 /* 🎬 黒帯 */
 body::before,
 body::after{
   content:"";
-  position: fixed;
+  position:fixed;
   left:0;
   width:100%;
   height:70px;
   background:black;
   z-index:10;
 }
-body::before{ top:0; }
-body::after{ bottom:0; }
+
+body::before{
+  top:0;
+}
+
+body::after{
+  bottom:0;
+}
 
 /* 背景 */
-.bg {
-  position: fixed;
-  inset: 0;
-  background: url("aizawa.jpg") center/cover no-repeat;
-  filter: brightness(0.45) blur(10px);
-  z-index: 0;
+.bg{
+  position:fixed;
+  inset:0;
+  background:url("aizawa.jpg") center/cover no-repeat;
+  filter:brightness(0.45) blur(10px);
+  z-index:0;
 }
 
 /* キャラ */
-.character {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  height: 100%;
-  max-width: 55%;
-  object-fit: contain;
-  z-index: 1;
-  pointer-events: none;
+.character{
+  position:fixed;
+  right:0;
+  bottom:0;
+  height:100%;
+  max-width:55%;
+  object-fit:contain;
+  z-index:1;
+  pointer-events:none;
 }
 
 /* 左パネル */
-.left-panel {
-  position: fixed;
-  top: 70px;
-  bottom: 70px;
-  left: 0;
-  width: 45%;
-  display: flex;
-  flex-direction: column;
-  z-index: 5;
+.left-panel{
+  position:fixed;
+  top:70px;
+  bottom:70px;
+  left:0;
+  width:45%;
+  display:flex;
+  flex-direction:column;
+  z-index:5;
 }
 
 /* 上バー */
-.top-bar {
-  height: 50px;
-  padding: 8px;
-  background: var(--panel);
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+.top-bar{
+  height:50px;
+  padding:8px;
+  background:var(--panel);
+  border-bottom:1px solid rgba(255,255,255,0.1);
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
 
-select {
-  padding: 6px;
-  border-radius: 6px;
+select{
+  padding:6px;
+  border-radius:6px;
 }
 
 /* チャット */
-.chat {
-  flex: 1;
-  overflow-y: auto;
-  padding: 15px;
-  background: linear-gradient(
+.chat{
+  flex:1;
+  overflow-y:auto;
+  padding:15px;
+  background:linear-gradient(
     to right,
     rgba(10,10,12,0.95),
     rgba(10,10,12,0.7),
     rgba(10,10,12,0)
   );
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
 }
 
 /* メッセージ */
-.message {
-  max-width: 85%;
-  margin-bottom: 14px;
-  padding: 12px 16px;
-  border-radius: 16px;
-  line-height: 1.8;
-  font-size: 15px;
-  word-break: break-word;
-  white-space: pre-wrap;
+.message{
+  max-width:85%;
+  margin-bottom:14px;
+  padding:12px 16px;
+  border-radius:16px;
+  line-height:1.8;
+  font-size:15px;
+  word-break:break-word;
+  white-space:pre-wrap;
 }
 
-.user {
-  background: var(--accent);
-  margin-left: auto;
+.user{
+  background:var(--accent);
+  margin-left:auto;
 }
 
-.ai {
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(6px);
+.ai{
+  background:rgba(255,255,255,0.15);
+  backdrop-filter:blur(6px);
+}
+
+/* 添付画像 */
+.chat-image{
+  width:100%;
+  border-radius:12px;
+  margin-top:10px;
 }
 
 /* 入力 */
-.input-area {
-  display: flex;
-  padding: 10px;
-  gap: 10px;
-  background: var(--panel);
+.input-area{
+  display:flex;
+  padding:10px;
+  gap:10px;
+  background:var(--panel);
+  align-items:flex-end;
 }
 
-textarea {
-  flex: 1;
-  height: 60px;
-  resize: none;
-  border-radius: 10px;
-  border: none;
-  outline: none;
-  padding: 10px;
-  background: #fff;
-  color: #000;
-  font-size: 16px;
+textarea{
+  flex:1;
+  height:60px;
+  resize:none;
+  border-radius:10px;
+  border:none;
+  outline:none;
+  padding:10px;
+  background:#fff;
+  color:#000;
+  font-size:16px;
 }
 
-button {
-  width: 80px;
-  border-radius: 10px;
-  border: none;
-  background: var(--accent);
-  color: white;
-  cursor: pointer;
+button{
+  width:80px;
+  height:60px;
+  border-radius:10px;
+  border:none;
+  background:var(--accent);
+  color:white;
+  cursor:pointer;
+}
+
+.image-btn{
+  width:60px;
+  height:60px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,0.12);
+  border-radius:10px;
+  cursor:pointer;
+  font-size:24px;
+}
+
+/* プレビュー */
+.preview-wrap{
+  padding:10px;
+  background:rgba(0,0,0,0.4);
+  display:none;
+}
+
+.preview-wrap img{
+  width:120px;
+  border-radius:12px;
 }
 
 /* スクロール */
-.chat::-webkit-scrollbar {
-  width: 6px;
-}
-.chat::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.2);
-  border-radius: 3px;
+.chat::-webkit-scrollbar{
+  width:6px;
 }
 
-/* 📱 スマホ最適化 */
-@media (max-width: 768px){
+.chat::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,0.2);
+  border-radius:3px;
+}
+
+/* 📱スマホ */
+@media (max-width:768px){
 
   body::before,
   body::after{
-    height: 40px;
+    height:40px;
   }
 
   .left-panel{
-    width: 100%;
-    top: 40px;
-    bottom: 40px;
+    width:100%;
+    top:40px;
+    bottom:40px;
   }
 
   .character{
-    opacity: 0.25;
-    max-width: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  .chat{
-    padding: 12px;
+    opacity:0.25;
+    max-width:100%;
+    left:50%;
+    transform:translateX(-50%);
   }
 
   .message{
-    max-width: 95%;
-    font-size: 15px;
-    line-height: 1.8;
+    max-width:95%;
   }
 
   textarea{
-    height: 50px;
+    height:50px;
   }
 
   button{
-    width: 70px;
+    width:70px;
+    height:50px;
+  }
+
+  .image-btn{
+    width:50px;
+    height:50px;
   }
 }
 </style>
@@ -203,6 +248,7 @@ button {
 <body>
 
 <div class="bg" id="bg"></div>
+
 <img id="characterImg" class="character" src="aizawa.png">
 
 <div class="left-panel">
@@ -217,8 +263,20 @@ button {
 
   <div id="chat" class="chat"></div>
 
+  <!-- 画像プレビュー -->
+  <div class="preview-wrap" id="previewWrap">
+    <img id="previewImg">
+  </div>
+
   <div class="input-area">
+
+    <label class="image-btn">
+      📷
+      <input type="file" id="imageInput" accept="image/*" hidden>
+    </label>
+
     <textarea id="input" placeholder="メッセージ入力"></textarea>
+
     <button id="sendBtn">送信</button>
   </div>
 
@@ -233,11 +291,18 @@ const characterSelect = document.getElementById("characterSelect");
 const characterImg = document.getElementById("characterImg");
 const bg = document.getElementById("bg");
 
+const imageInput = document.getElementById("imageInput");
+const previewWrap = document.getElementById("previewWrap");
+const previewImg = document.getElementById("previewImg");
+
 let history = [];
+let currentImageBase64 = null;
 
 /* キャラ切替 */
 characterSelect.addEventListener("change", () => {
+
   const char = characterSelect.value;
+
   characterImg.src = char + ".png";
   bg.style.backgroundImage = `url(${char}.jpg)`;
 
@@ -245,10 +310,33 @@ characterSelect.addEventListener("change", () => {
   chat.innerHTML = "";
 });
 
+/* 画像選択 */
+imageInput.addEventListener("change", e => {
+
+  const file = e.target.files[0];
+
+  if(!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+
+    currentImageBase64 = reader.result;
+
+    previewImg.src = currentImageBase64;
+    previewWrap.style.display = "block";
+  };
+
+  reader.readAsDataURL(file);
+});
+
 /* ログ削減 */
 function trimChat(){
+
   const messages = chat.querySelectorAll(".message");
+
   if(messages.length > 30){
+
     for(let i = 0; i < 10; i++){
       messages[i].remove();
     }
@@ -256,11 +344,26 @@ function trimChat(){
 }
 
 /* メッセージ */
-function addMessage(text, type){
+function addMessage(text, type, image=null){
+
   const div = document.createElement("div");
   div.className = "message " + type;
-  div.textContent = text;
+
+  if(text){
+    const textNode = document.createElement("div");
+    textNode.textContent = text;
+    div.appendChild(textNode);
+  }
+
+  if(image){
+    const img = document.createElement("img");
+    img.src = image;
+    img.className = "chat-image";
+    div.appendChild(img);
+  }
+
   chat.appendChild(div);
+
   chat.scrollTop = chat.scrollHeight;
 
   trimChat();
@@ -268,51 +371,89 @@ function addMessage(text, type){
 
 /* 送信 */
 async function send(){
-  const text = input.value.trim();
-  if(!text) return;
 
-  addMessage(text, "user");
+  const text = input.value.trim();
+
+  if(!text && !currentImageBase64) return;
+
+  addMessage(text, "user", currentImageBase64);
+
   input.value = "";
 
-  history.push({ role:"user", content:text });
+  history.push({
+    role:"user",
+    content:text,
+    image:currentImageBase64
+  });
+
   history = history.slice(-6);
 
   const loading = document.createElement("div");
+
   loading.className = "message ai";
-  loading.textContent = "…";
+  loading.textContent = "考え中…";
+
   chat.appendChild(loading);
+
   chat.scrollTop = chat.scrollHeight;
 
   try {
+
     const res = await fetch("/api/deepseek", {
+
       method:"POST",
-      headers:{ "Content-Type":"application/json" },
+
+      headers:{
+        "Content-Type":"application/json"
+      },
+
       body: JSON.stringify({
+
         history,
-        character: characterSelect.value
+        character: characterSelect.value,
+        image: currentImageBase64
       })
     });
 
     const data = await res.json();
+
     loading.remove();
 
     if(!res.ok){
+
       addMessage("エラー", "ai");
       return;
     }
 
     addMessage(data.reply, "ai");
-    history.push({ role:"assistant", content:data.reply });
+
+    history.push({
+      role:"assistant",
+      content:data.reply
+    });
+
+    /* リセット */
+    currentImageBase64 = null;
+    imageInput.value = "";
+
+    previewWrap.style.display = "none";
 
   } catch(e){
+
     loading.remove();
+
     addMessage("通信エラー", "ai");
   }
 }
 
 /* Enter送信 */
 input.addEventListener("keydown", e=>{
-  if(e.key==="Enter" && !e.shiftKey && !e.isComposing){
+
+  if(
+    e.key==="Enter" &&
+    !e.shiftKey &&
+    !e.isComposing
+  ){
     e.preventDefault();
     send();
   }
