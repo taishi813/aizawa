@@ -6,6 +6,7 @@
 <title>Cinematic AI Chat</title>
 
 <style>
+
 :root{
   --panel: rgba(10,10,12,0.88);
   --accent: #ff4fa3;
@@ -24,7 +25,8 @@ body{
   overflow:hidden;
 }
 
-/* 🎬 黒帯 */
+/* 黒帯 */
+
 body::before,
 body::after{
   content:"";
@@ -45,6 +47,7 @@ body::after{
 }
 
 /* 背景 */
+
 .bg{
   position:fixed;
   inset:0;
@@ -53,10 +56,10 @@ body::after{
   background-position:center;
   filter:brightness(0.45) blur(10px);
   z-index:0;
-  transition:0.4s;
 }
 
 /* キャラ */
+
 .character{
   position:fixed;
   right:0;
@@ -66,10 +69,10 @@ body::after{
   object-fit:contain;
   z-index:1;
   pointer-events:none;
-  transition:0.3s;
 }
 
-/* 左パネル */
+/* 左 */
+
 .left-panel{
   position:fixed;
   top:70px;
@@ -82,61 +85,44 @@ body::after{
 }
 
 /* 上バー */
+
 .top-bar{
   height:50px;
   padding:8px;
   background:var(--panel);
-  border-bottom:1px solid rgba(255,255,255,0.1);
   display:flex;
   align-items:center;
-  gap:10px;
 }
 
 select{
   padding:8px;
   border-radius:8px;
   border:none;
-  background:#fff;
-  font-size:15px;
 }
 
 /* チャット */
+
 .chat{
   flex:1;
   overflow-y:auto;
   padding:15px;
   background:linear-gradient(
     to right,
-    rgba(10,10,12,0.96),
+    rgba(10,10,12,0.95),
     rgba(10,10,12,0.7),
     rgba(10,10,12,0)
   );
-  scroll-behavior:smooth;
-  -webkit-overflow-scrolling:touch;
 }
 
 /* メッセージ */
+
 .message{
   max-width:85%;
   margin-bottom:14px;
   padding:12px 16px;
   border-radius:16px;
   line-height:1.8;
-  font-size:15px;
-  word-break:break-word;
   white-space:pre-wrap;
-  animation:fade 0.2s ease;
-}
-
-@keyframes fade{
-  from{
-    opacity:0;
-    transform:translateY(6px);
-  }
-  to{
-    opacity:1;
-    transform:translateY(0);
-  }
 }
 
 .user{
@@ -149,86 +135,37 @@ select{
   backdrop-filter:blur(6px);
 }
 
-/* 添付画像 */
-.chat-image{
-  width:100%;
-  border-radius:12px;
-  margin-top:10px;
-}
-
 /* 入力 */
+
 .input-area{
   display:flex;
   padding:10px;
   gap:10px;
   background:var(--panel);
-  align-items:flex-end;
 }
 
 textarea{
   flex:1;
   height:60px;
   resize:none;
-  border-radius:10px;
   border:none;
   outline:none;
+  border-radius:10px;
   padding:10px;
-  background:#fff;
-  color:#000;
   font-size:16px;
 }
 
 button{
   width:80px;
-  height:60px;
-  border-radius:10px;
   border:none;
+  border-radius:10px;
   background:var(--accent);
   color:white;
   cursor:pointer;
-  font-size:15px;
 }
 
-button:hover{
-  opacity:0.9;
-}
+/* スマホ */
 
-.image-btn{
-  width:60px;
-  height:60px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:rgba(255,255,255,0.12);
-  border-radius:10px;
-  cursor:pointer;
-  font-size:24px;
-  user-select:none;
-}
-
-/* プレビュー */
-.preview-wrap{
-  padding:10px;
-  background:rgba(0,0,0,0.4);
-  display:none;
-}
-
-.preview-wrap img{
-  width:120px;
-  border-radius:12px;
-}
-
-/* スクロール */
-.chat::-webkit-scrollbar{
-  width:6px;
-}
-
-.chat::-webkit-scrollbar-thumb{
-  background:rgba(255,255,255,0.2);
-  border-radius:3px;
-}
-
-/* 📱スマホ */
 @media (max-width:768px){
 
   body::before,
@@ -252,22 +189,8 @@ button:hover{
   .message{
     max-width:95%;
   }
-
-  textarea{
-    height:50px;
-    font-size:16px;
-  }
-
-  button{
-    width:70px;
-    height:50px;
-  }
-
-  .image-btn{
-    width:50px;
-    height:50px;
-  }
 }
+
 </style>
 </head>
 
@@ -287,31 +210,24 @@ button:hover{
   <div class="top-bar">
 
     <select id="characterSelect">
-      <option value="normal">ノーマル</option>
-      <option value="aizawa">相澤仁美</option>
-      <option value="ogura">小倉優香</option>
+      <option value="normal">
+        ノーマル
+      </option>
+
+      <option value="aizawa">
+        相澤仁美
+      </option>
+
+      <option value="ogura">
+        小倉優香
+      </option>
     </select>
 
   </div>
 
   <div id="chat" class="chat"></div>
 
-  <!-- 画像プレビュー -->
-  <div class="preview-wrap" id="previewWrap">
-    <img id="previewImg">
-  </div>
-
   <div class="input-area">
-
-    <label class="image-btn">
-      📷
-      <input
-        type="file"
-        id="imageInput"
-        accept="image/*"
-        hidden
-      >
-    </label>
 
     <textarea
       id="input"
@@ -327,9 +243,15 @@ button:hover{
 </div>
 
 <script>
-const chat = document.getElementById("chat");
-const input = document.getElementById("input");
-const sendBtn = document.getElementById("sendBtn");
+
+const chat =
+  document.getElementById("chat");
+
+const input =
+  document.getElementById("input");
+
+const sendBtn =
+  document.getElementById("sendBtn");
 
 const characterSelect =
   document.getElementById("characterSelect");
@@ -340,236 +262,186 @@ const characterImg =
 const bg =
   document.getElementById("bg");
 
-const imageInput =
-  document.getElementById("imageInput");
-
-const previewWrap =
-  document.getElementById("previewWrap");
-
-const previewImg =
-  document.getElementById("previewImg");
-
 let history = [];
-let currentImageBase64 = null;
 
 /* キャラ切替 */
-characterSelect.addEventListener("change", () => {
 
-  const char = characterSelect.value;
+characterSelect.addEventListener(
+  "change",
+  ()=>{
 
-  if(char === "normal"){
+    const char =
+      characterSelect.value;
 
-    characterImg.style.display = "none";
+    if(char === "normal"){
 
-    bg.style.backgroundImage =
-      "linear-gradient(to bottom,#111,#000)";
+      characterImg.style.display =
+        "none";
 
-  } else {
+      bg.style.backgroundImage =
+        "linear-gradient(to bottom,#111,#000)";
 
-    characterImg.style.display = "block";
+    } else {
 
-    characterImg.src = char + ".png";
+      characterImg.style.display =
+        "block";
 
-    bg.style.backgroundImage =
-      `url(${char}.jpg)`;
+      characterImg.src =
+        char + ".png";
+
+      bg.style.backgroundImage =
+        `url(${char}.jpg)`;
+    }
+
+    history = [];
+
+    chat.innerHTML = "";
   }
+);
 
-  history = [];
-  chat.innerHTML = "";
-});
+/* 初期化 */
 
-/* 初期状態 */
 characterSelect.dispatchEvent(
   new Event("change")
 );
 
-/* 画像選択 */
-imageInput.addEventListener("change", e => {
-
-  const file = e.target.files[0];
-
-  if(!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = () => {
-
-    currentImageBase64 = reader.result;
-
-    previewImg.src = currentImageBase64;
-
-    previewWrap.style.display = "block";
-  };
-
-  reader.readAsDataURL(file);
-});
-
-/* ログ削減 */
-function trimChat(){
-
-  const messages =
-    chat.querySelectorAll(".message");
-
-  if(messages.length > 30){
-
-    for(let i = 0; i < 10; i++){
-
-      if(messages[i]){
-        messages[i].remove();
-      }
-    }
-  }
-}
-
 /* メッセージ */
-function addMessage(text, type, image=null){
 
-  const div = document.createElement("div");
+function addMessage(text,type){
 
-  div.className = "message " + type;
+  const div =
+    document.createElement("div");
 
-  if(text){
+  div.className =
+    "message " + type;
 
-    const textNode =
-      document.createElement("div");
-
-    textNode.textContent = text;
-
-    div.appendChild(textNode);
-  }
-
-  if(image){
-
-    const img =
-      document.createElement("img");
-
-    img.src = image;
-
-    img.className = "chat-image";
-
-    div.appendChild(img);
-  }
+  div.textContent = text;
 
   chat.appendChild(div);
 
-  requestAnimationFrame(() => {
-    chat.scrollTop = chat.scrollHeight;
-  });
-
-  trimChat();
+  chat.scrollTop =
+    chat.scrollHeight;
 }
 
 /* 送信 */
+
 async function send(){
 
-  const text = input.value.trim();
+  const text =
+    input.value.trim();
 
-  if(!text && !currentImageBase64){
-    return;
-  }
+  if(!text) return;
 
-  addMessage(
-    text,
-    "user",
-    currentImageBase64
-  );
+  addMessage(text,"user");
 
   input.value = "";
 
   history.push({
     role:"user",
-    content:text,
-    image:currentImageBase64
+    content:text
   });
 
-  history = history.slice(-6);
+  history =
+    history.slice(-10);
 
   const loading =
     document.createElement("div");
 
-  loading.className = "message ai";
+  loading.className =
+    "message ai";
 
-  loading.textContent = "考え中…";
+  loading.textContent =
+    "考え中…";
 
   chat.appendChild(loading);
 
-  chat.scrollTop = chat.scrollHeight;
+  chat.scrollTop =
+    chat.scrollHeight;
 
   try {
 
-    const res = await fetch(
-      "/api/deepseek",
-      {
-        method:"POST",
+    const res =
+      await fetch(
+        "/api/deepseek",
+        {
+          method:"POST",
 
-        headers:{
-          "Content-Type":"application/json"
-        },
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
 
-        body: JSON.stringify({
+          body: JSON.stringify({
 
-          history,
-          character: characterSelect.value,
-          image: currentImageBase64
-        })
-      }
-    );
+            history,
 
-    const data = await res.json();
+            character:
+              characterSelect.value
+          })
+        }
+      );
+
+    const data =
+      await res.json();
 
     loading.remove();
 
     if(!res.ok){
 
       addMessage(
-        data.error || "エラー",
+        "エラー: " +
+        data.error,
         "ai"
       );
 
       return;
     }
 
-    addMessage(data.reply, "ai");
+    addMessage(
+      data.reply,
+      "ai"
+    );
 
     history.push({
       role:"assistant",
       content:data.reply
     });
 
-    /* リセット */
-    currentImageBase64 = null;
-
-    imageInput.value = "";
-
-    previewWrap.style.display = "none";
-
   } catch(e){
+
+    console.error(e);
 
     loading.remove();
 
     addMessage(
-      "通信エラー",
+      "通信エラー: " +
+      e.message,
       "ai"
     );
   }
 }
 
-/* Enter送信 */
-input.addEventListener("keydown", e => {
+/* Enter */
 
-  if(
-    e.key === "Enter" &&
-    !e.shiftKey &&
-    !e.isComposing
-  ){
+input.addEventListener(
+  "keydown",
+  e=>{
 
-    e.preventDefault();
+    if(
+      e.key==="Enter" &&
+      !e.shiftKey &&
+      !e.isComposing
+    ){
 
-    send();
+      e.preventDefault();
+
+      send();
+    }
   }
-});
+);
 
 sendBtn.onclick = send;
+
 </script>
 
 </body>
