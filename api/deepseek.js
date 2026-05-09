@@ -1,3 +1,5 @@
+// api/deepseek.js
+
 const OpenAI = require("openai");
 const fs = require("fs");
 const path = require("path");
@@ -14,8 +16,6 @@ const client = new OpenAI({
 module.exports =
 async function handler(req,res){
 
-  /* CORS */
-
   res.setHeader(
     "Access-Control-Allow-Origin",
     "*"
@@ -23,7 +23,7 @@ async function handler(req,res){
 
   res.setHeader(
     "Access-Control-Allow-Methods",
-    "POST, OPTIONS"
+    "POST,OPTIONS"
   );
 
   res.setHeader(
@@ -41,18 +41,20 @@ async function handler(req,res){
     return res.status(405).json({
 
       error:
-        "Method not allowed"
+        "method not allowed"
     });
   }
 
   try {
 
-    const {
-      history = [],
-      character = "normal"
-    } = req.body || {};
+    const body =
+      req.body || {};
 
-    /* システムプロンプト */
+    const history =
+      body.history || [];
+
+    const character =
+      body.character || "normal";
 
     let systemPrompt = "";
 
@@ -61,7 +63,7 @@ async function handler(req,res){
       const promptPath =
         path.join(
           process.cwd(),
-          `${character}.txt`
+          character + ".txt"
         );
 
       if(fs.existsSync(promptPath)){
@@ -73,8 +75,6 @@ async function handler(req,res){
           );
       }
     }
-
-    /* messages */
 
     const messages = [];
 
@@ -92,14 +92,11 @@ async function handler(req,res){
 
       messages.push({
 
-        role: msg.role,
+        role:msg.role,
 
-        content:
-          msg.content || ""
+        content:msg.content
       });
     }
-
-    /* API */
 
     const completion =
       await client.chat.completions.create({
@@ -110,7 +107,7 @@ async function handler(req,res){
 
         temperature:0.9,
 
-        max_tokens:700
+        max_tokens:500
       });
 
     const reply =
@@ -132,8 +129,7 @@ async function handler(req,res){
     return res.status(500).json({
 
       error:
-        err.message ||
-        "server error"
+        String(err.message || err)
     });
   }
 };
