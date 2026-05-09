@@ -1,20 +1,7 @@
-// api/deepseek.js
-
-const OpenAI = require("openai");
 const fs = require("fs");
 const path = require("path");
 
-const client = new OpenAI({
-
-  apiKey:
-    process.env.DEEPSEEK_API_KEY,
-
-  baseURL:
-    "https://api.deepseek.com"
-});
-
-module.exports =
-async function handler(req,res){
+module.exports = async function handler(req, res){
 
   res.setHeader(
     "Access-Control-Allow-Origin",
@@ -23,7 +10,7 @@ async function handler(req,res){
 
   res.setHeader(
     "Access-Control-Allow-Methods",
-    "POST,OPTIONS"
+    "POST, OPTIONS"
   );
 
   res.setHeader(
@@ -32,39 +19,33 @@ async function handler(req,res){
   );
 
   if(req.method === "OPTIONS"){
-
     return res.status(200).end();
   }
 
   if(req.method !== "POST"){
 
     return res.status(405).json({
-
-      error:
-        "method not allowed"
+      error:"Method not allowed"
     });
   }
 
   try {
 
-    const body =
-      req.body || {};
+    const {
+      history = [],
+      character = "normal"
+    } = req.body || {};
 
-    const history =
-      body.history || [];
-
-    const character =
-      body.character || "normal";
+    /* プロンプト */
 
     let systemPrompt = "";
 
     if(character !== "normal"){
 
-      const promptPath =
-        path.join(
-          process.cwd(),
-          character + ".txt"
-        );
+      const promptPath = path.join(
+        process.cwd(),
+        `${character}.txt`
+      );
 
       if(fs.existsSync(promptPath)){
 
@@ -76,14 +57,14 @@ async function handler(req,res){
       }
     }
 
+    /* messages */
+
     const messages = [];
 
     if(systemPrompt){
 
       messages.push({
-
         role:"system",
-
         content:systemPrompt
       });
     }
@@ -91,34 +72,60 @@ async function handler(req,res){
     for(const msg of history){
 
       messages.push({
-
-        role:msg.role,
-
-        content:msg.content
+        role: msg.role,
+        content: msg.content
       });
     }
 
-    const completion =
-      await client.chat.completions.create({
+    /* DeepSeek API */
 
-        model:"deepseek-chat",
+    const response = await fetch(
+      "https://api.deepseek.com/chat/completions",
+      {
+        method:"POST",
 
-        messages,
+        headers:{
+          "Content-Type":"application/json",
 
-        temperature:0.9,
+          "Authorization":
+            `Bearer ${process.env.DEEPSEEK_API_KEY}`
+        },
 
-        max_tokens:500
+        body: JSON.stringify({
+
+          model:"deepseek-chat",
+
+          messages,
+
+          temperature:0.9,
+
+          max_tokens:500
+        })
+      }
+    );
+
+    const data =
+      await response.json();
+
+    if(!response.ok){
+
+      console.error(data);
+
+      return res.status(500).json({
+
+        error:
+          data.error?.message ||
+          "DeepSeek API Error"
       });
+    }
 
     const reply =
-      completion
-      .choices?.[0]
+      data.choices?.[0]
       ?.message
       ?.content ||
       "返答なし";
 
     return res.status(200).json({
-
       reply
     });
 
@@ -129,7 +136,8 @@ async function handler(req,res){
     return res.status(500).json({
 
       error:
-        String(err.message || err)
+        err.message ||
+        "Server Error"
     });
   }
 };
