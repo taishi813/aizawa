@@ -3,13 +3,19 @@ const fs = require("fs");
 const path = require("path");
 
 const client = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY,
-  baseURL: "https://api.deepseek.com"
+
+  apiKey:
+    process.env.DEEPSEEK_API_KEY,
+
+  baseURL:
+    "https://api.deepseek.com"
 });
 
-module.exports = async function handler(req, res){
+module.exports =
+async function handler(req,res){
 
   /* CORS */
+
   res.setHeader(
     "Access-Control-Allow-Origin",
     "*"
@@ -26,13 +32,16 @@ module.exports = async function handler(req, res){
   );
 
   if(req.method === "OPTIONS"){
+
     return res.status(200).end();
   }
 
   if(req.method !== "POST"){
 
     return res.status(405).json({
-      error:"Method not allowed"
+
+      error:
+        "Method not allowed"
     });
   }
 
@@ -40,19 +49,20 @@ module.exports = async function handler(req, res){
 
     const {
       history = [],
-      character = "normal",
-      image = null
+      character = "normal"
     } = req.body || {};
 
-    /* キャラプロンプト */
+    /* システムプロンプト */
+
     let systemPrompt = "";
 
     if(character !== "normal"){
 
-      const promptPath = path.join(
-        process.cwd(),
-        `${character}.txt`
-      );
+      const promptPath =
+        path.join(
+          process.cwd(),
+          `${character}.txt`
+        );
 
       if(fs.existsSync(promptPath)){
 
@@ -64,49 +74,33 @@ module.exports = async function handler(req, res){
       }
     }
 
-    /* メッセージ生成 */
+    /* messages */
+
     const messages = [];
 
-    /* システム */
     if(systemPrompt){
 
       messages.push({
+
         role:"system",
+
         content:systemPrompt
       });
     }
 
-    /* 会話履歴 */
     for(const msg of history){
 
-      if(msg.image){
+      messages.push({
 
-        messages.push({
-          role: msg.role,
-          content: [
-            {
-              type:"text",
-              text: msg.content || ""
-            },
-            {
-              type:"image_url",
-              image_url:{
-                url: msg.image
-              }
-            }
-          ]
-        });
+        role: msg.role,
 
-      } else {
-
-        messages.push({
-          role: msg.role,
-          content: msg.content || ""
-        });
-      }
+        content:
+          msg.content || ""
+      });
     }
 
     /* API */
+
     const completion =
       await client.chat.completions.create({
 
@@ -120,11 +114,14 @@ module.exports = async function handler(req, res){
       });
 
     const reply =
-      completion.choices?.[0]
+      completion
+      .choices?.[0]
       ?.message
-      ?.content || "返答なし";
+      ?.content ||
+      "返答なし";
 
     return res.status(200).json({
+
       reply
     });
 
@@ -135,8 +132,8 @@ module.exports = async function handler(req, res){
     return res.status(500).json({
 
       error:
-        err?.message ||
-        "Server error"
+        err.message ||
+        "server error"
     });
   }
 };
