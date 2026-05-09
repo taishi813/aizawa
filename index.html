@@ -48,9 +48,12 @@ body::after{
 .bg{
   position:fixed;
   inset:0;
-  background:url("aizawa.jpg") center/cover no-repeat;
+  background:linear-gradient(to bottom,#111,#000);
+  background-size:cover;
+  background-position:center;
   filter:brightness(0.45) blur(10px);
   z-index:0;
+  transition:0.4s;
 }
 
 /* キャラ */
@@ -63,6 +66,7 @@ body::after{
   object-fit:contain;
   z-index:1;
   pointer-events:none;
+  transition:0.3s;
 }
 
 /* 左パネル */
@@ -89,8 +93,11 @@ body::after{
 }
 
 select{
-  padding:6px;
-  border-radius:6px;
+  padding:8px;
+  border-radius:8px;
+  border:none;
+  background:#fff;
+  font-size:15px;
 }
 
 /* チャット */
@@ -100,7 +107,7 @@ select{
   padding:15px;
   background:linear-gradient(
     to right,
-    rgba(10,10,12,0.95),
+    rgba(10,10,12,0.96),
     rgba(10,10,12,0.7),
     rgba(10,10,12,0)
   );
@@ -118,6 +125,18 @@ select{
   font-size:15px;
   word-break:break-word;
   white-space:pre-wrap;
+  animation:fade 0.2s ease;
+}
+
+@keyframes fade{
+  from{
+    opacity:0;
+    transform:translateY(6px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
 }
 
 .user{
@@ -167,6 +186,11 @@ button{
   background:var(--accent);
   color:white;
   cursor:pointer;
+  font-size:15px;
+}
+
+button:hover{
+  opacity:0.9;
 }
 
 .image-btn{
@@ -179,6 +203,7 @@ button{
   border-radius:10px;
   cursor:pointer;
   font-size:24px;
+  user-select:none;
 }
 
 /* プレビュー */
@@ -230,6 +255,7 @@ button{
 
   textarea{
     height:50px;
+    font-size:16px;
   }
 
   button{
@@ -249,16 +275,23 @@ button{
 
 <div class="bg" id="bg"></div>
 
-<img id="characterImg" class="character" src="aizawa.png">
+<img
+  id="characterImg"
+  class="character"
+  src=""
+  style="display:none;"
+>
 
 <div class="left-panel">
 
   <div class="top-bar">
+
     <select id="characterSelect">
+      <option value="normal">ノーマル</option>
       <option value="aizawa">相澤仁美</option>
       <option value="ogura">小倉優香</option>
-      <option value="kishi">岸明日香</option>
     </select>
+
   </div>
 
   <div id="chat" class="chat"></div>
@@ -272,12 +305,23 @@ button{
 
     <label class="image-btn">
       📷
-      <input type="file" id="imageInput" accept="image/*" hidden>
+      <input
+        type="file"
+        id="imageInput"
+        accept="image/*"
+        hidden
+      >
     </label>
 
-    <textarea id="input" placeholder="メッセージ入力"></textarea>
+    <textarea
+      id="input"
+      placeholder="メッセージ入力"
+    ></textarea>
 
-    <button id="sendBtn">送信</button>
+    <button id="sendBtn">
+      送信
+    </button>
+
   </div>
 
 </div>
@@ -287,13 +331,23 @@ const chat = document.getElementById("chat");
 const input = document.getElementById("input");
 const sendBtn = document.getElementById("sendBtn");
 
-const characterSelect = document.getElementById("characterSelect");
-const characterImg = document.getElementById("characterImg");
-const bg = document.getElementById("bg");
+const characterSelect =
+  document.getElementById("characterSelect");
 
-const imageInput = document.getElementById("imageInput");
-const previewWrap = document.getElementById("previewWrap");
-const previewImg = document.getElementById("previewImg");
+const characterImg =
+  document.getElementById("characterImg");
+
+const bg =
+  document.getElementById("bg");
+
+const imageInput =
+  document.getElementById("imageInput");
+
+const previewWrap =
+  document.getElementById("previewWrap");
+
+const previewImg =
+  document.getElementById("previewImg");
 
 let history = [];
 let currentImageBase64 = null;
@@ -303,12 +357,31 @@ characterSelect.addEventListener("change", () => {
 
   const char = characterSelect.value;
 
-  characterImg.src = char + ".png";
-  bg.style.backgroundImage = `url(${char}.jpg)`;
+  if(char === "normal"){
+
+    characterImg.style.display = "none";
+
+    bg.style.backgroundImage =
+      "linear-gradient(to bottom,#111,#000)";
+
+  } else {
+
+    characterImg.style.display = "block";
+
+    characterImg.src = char + ".png";
+
+    bg.style.backgroundImage =
+      `url(${char}.jpg)`;
+  }
 
   history = [];
   chat.innerHTML = "";
 });
+
+/* 初期状態 */
+characterSelect.dispatchEvent(
+  new Event("change")
+);
 
 /* 画像選択 */
 imageInput.addEventListener("change", e => {
@@ -324,6 +397,7 @@ imageInput.addEventListener("change", e => {
     currentImageBase64 = reader.result;
 
     previewImg.src = currentImageBase64;
+
     previewWrap.style.display = "block";
   };
 
@@ -333,12 +407,16 @@ imageInput.addEventListener("change", e => {
 /* ログ削減 */
 function trimChat(){
 
-  const messages = chat.querySelectorAll(".message");
+  const messages =
+    chat.querySelectorAll(".message");
 
   if(messages.length > 30){
 
     for(let i = 0; i < 10; i++){
-      messages[i].remove();
+
+      if(messages[i]){
+        messages[i].remove();
+      }
     }
   }
 }
@@ -347,24 +425,36 @@ function trimChat(){
 function addMessage(text, type, image=null){
 
   const div = document.createElement("div");
+
   div.className = "message " + type;
 
   if(text){
-    const textNode = document.createElement("div");
+
+    const textNode =
+      document.createElement("div");
+
     textNode.textContent = text;
+
     div.appendChild(textNode);
   }
 
   if(image){
-    const img = document.createElement("img");
+
+    const img =
+      document.createElement("img");
+
     img.src = image;
+
     img.className = "chat-image";
+
     div.appendChild(img);
   }
 
   chat.appendChild(div);
 
-  chat.scrollTop = chat.scrollHeight;
+  requestAnimationFrame(() => {
+    chat.scrollTop = chat.scrollHeight;
+  });
 
   trimChat();
 }
@@ -374,9 +464,15 @@ async function send(){
 
   const text = input.value.trim();
 
-  if(!text && !currentImageBase64) return;
+  if(!text && !currentImageBase64){
+    return;
+  }
 
-  addMessage(text, "user", currentImageBase64);
+  addMessage(
+    text,
+    "user",
+    currentImageBase64
+  );
 
   input.value = "";
 
@@ -388,9 +484,11 @@ async function send(){
 
   history = history.slice(-6);
 
-  const loading = document.createElement("div");
+  const loading =
+    document.createElement("div");
 
   loading.className = "message ai";
+
   loading.textContent = "考え中…";
 
   chat.appendChild(loading);
@@ -399,21 +497,23 @@ async function send(){
 
   try {
 
-    const res = await fetch("/api/deepseek", {
+    const res = await fetch(
+      "/api/deepseek",
+      {
+        method:"POST",
 
-      method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
 
-      headers:{
-        "Content-Type":"application/json"
-      },
+        body: JSON.stringify({
 
-      body: JSON.stringify({
-
-        history,
-        character: characterSelect.value,
-        image: currentImageBase64
-      })
-    });
+          history,
+          character: characterSelect.value,
+          image: currentImageBase64
+        })
+      }
+    );
 
     const data = await res.json();
 
@@ -421,7 +521,11 @@ async function send(){
 
     if(!res.ok){
 
-      addMessage("エラー", "ai");
+      addMessage(
+        data.error || "エラー",
+        "ai"
+      );
+
       return;
     }
 
@@ -434,6 +538,7 @@ async function send(){
 
     /* リセット */
     currentImageBase64 = null;
+
     imageInput.value = "";
 
     previewWrap.style.display = "none";
@@ -442,19 +547,24 @@ async function send(){
 
     loading.remove();
 
-    addMessage("通信エラー", "ai");
+    addMessage(
+      "通信エラー",
+      "ai"
+    );
   }
 }
 
 /* Enter送信 */
-input.addEventListener("keydown", e=>{
+input.addEventListener("keydown", e => {
 
   if(
-    e.key==="Enter" &&
+    e.key === "Enter" &&
     !e.shiftKey &&
     !e.isComposing
   ){
+
     e.preventDefault();
+
     send();
   }
 });
