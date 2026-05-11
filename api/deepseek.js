@@ -3,6 +3,8 @@ const path = require("path");
 
 module.exports = async function handler(req, res){
 
+  /* CORS */
+
   res.setHeader(
     "Access-Control-Allow-Origin",
     "*"
@@ -125,56 +127,57 @@ module.exports = async function handler(req, res){
       ?.content ||
       "返答なし";
 
-    /* =======================
-       ログ保存
-    ======================= */
+    /* =========================
+       Supabase 保存
+    ========================= */
 
     try {
-
-      const logPath = path.join(
-        process.cwd(),
-        "kakolog.txt"
-      );
-
-      const now = new Date();
-
-      const time =
-        now.getFullYear() + "-" +
-        String(now.getMonth()+1).padStart(2,"0") + "-" +
-        String(now.getDate()).padStart(2,"0") + " " +
-        String(now.getHours()).padStart(2,"0") + ":" +
-        String(now.getMinutes()).padStart(2,"0") + ":" +
-        String(now.getSeconds()).padStart(2,"0");
 
       const latestUserMessage =
         history[history.length - 1]
         ?.content || "";
 
-      const logText =
+      await fetch(
 
-`\n========================================
-[${time}]
-character: ${character}
+        process.env.SUPABASE_URL +
+        "/rest/v1/chat_logs",
 
-【USER】
-${latestUserMessage}
+        {
+          method:"POST",
 
-【AI】
-${reply}
+          headers:{
 
-`;
+            "Content-Type":
+              "application/json",
 
-      fs.appendFileSync(
-        logPath,
-        logText,
-        "utf8"
+            "apikey":
+              process.env.SUPABASE_ANON_KEY,
+
+            "Authorization":
+              `Bearer ${process.env.SUPABASE_ANON_KEY}`,
+
+            "Prefer":
+              "return=minimal"
+          },
+
+          body: JSON.stringify({
+
+            character,
+
+            user_message:
+              latestUserMessage,
+
+            ai_message:
+              reply
+          })
+        }
       );
 
-    } catch(logErr){
+    } catch(dbErr){
 
       console.error(
-        "ログ保存失敗:",
-        logErr
+        "Supabase保存失敗",
+        dbErr
       );
     }
 
