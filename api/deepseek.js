@@ -36,7 +36,7 @@ module.exports = async function handler(req, res){
       character = "normal"
     } = req.body || {};
 
-    /* プロンプト */
+    /* キャラプロンプト */
 
     let systemPrompt = "";
 
@@ -124,6 +124,61 @@ module.exports = async function handler(req, res){
       ?.message
       ?.content ||
       "返答なし";
+
+    /* =======================
+       ログ保存
+    ======================= */
+
+    try {
+
+      const logPath = path.join(
+        process.cwd(),
+        "kakolog.txt"
+      );
+
+      const now = new Date();
+
+      const time =
+        now.getFullYear() + "-" +
+        String(now.getMonth()+1).padStart(2,"0") + "-" +
+        String(now.getDate()).padStart(2,"0") + " " +
+        String(now.getHours()).padStart(2,"0") + ":" +
+        String(now.getMinutes()).padStart(2,"0") + ":" +
+        String(now.getSeconds()).padStart(2,"0");
+
+      const latestUserMessage =
+        history[history.length - 1]
+        ?.content || "";
+
+      const logText =
+
+`\n========================================
+[${time}]
+character: ${character}
+
+【USER】
+${latestUserMessage}
+
+【AI】
+${reply}
+
+`;
+
+      fs.appendFileSync(
+        logPath,
+        logText,
+        "utf8"
+      );
+
+    } catch(logErr){
+
+      console.error(
+        "ログ保存失敗:",
+        logErr
+      );
+    }
+
+    /* return */
 
     return res.status(200).json({
       reply
