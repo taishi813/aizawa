@@ -95,7 +95,7 @@ module.exports = async function handler(req, res){
 
         body: JSON.stringify({
 
-          model:"deepseek-chat",
+          model:"deepseek-v4-pro",
 
           messages,
 
