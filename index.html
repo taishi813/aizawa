@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Cinematic Gravure AI</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+
+<style>
+
+:root{
+  --bg:#060606;
+  --panel:rgba(15,15,18,0.72);
+  --panel-strong:rgba(15,15,18,0.92);
+
+  --text:#f5f5f5;
+  --sub:#aaaaaa;
+
+  --accent:#ff4fa3;
+  --accent2:#ff7bc0;
+
+  --blur:18px;
+
+  --shadow:
+    0 10px 40px rgba(0,0,0,.45);
+
+  --radius:22px;
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+
+  background:var(--bg);
+  color:var(--text);
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Helvetica Neue",
+    sans-serif;
+}
+
+/* 背景 */
+
+.bg{
+  position:fixed;
+  inset:0;
+
+  background:#111;
+  background-size:cover;
+  background-position:center;
+
+  transform:scale(1.05);
+
+  filter:
+    brightness(.38)
+    blur(16px);
+
+  transition:
+    background-image .6s ease,
+    filter .6s ease;
+
+  z-index:0;
+}
+
+.bg::after{
+  content:"";
+
+  position:absolute;
+  inset:0;
+
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(255,255,255,.06),
+      transparent 45%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(0,0,0,.15),
+      rgba(0,0,0,.72)
+    );
+}
+
+/* キャラ */
+
+.character-wrap{
+  position:fixed;
+  inset:0;
+
+  pointer-events:none;
+  z-index:1;
+}
+
+.character{
+
+  position:absolute;
+
+  right:0;
+  bottom:0;
+
+  height:100%;
+  max-width:58%;
+
+  object-fit:contain;
+
+  opacity:0;
+  transform:
+    translateX(30px)
+    scale(1.02);
+
+  transition:
+    opacity .5s ease,
+    transform .7s ease;
+
+  filter:
+    drop-shadow(0 10px 40px rgba(0,0,0,.55));
+}
+
+.character.show{
+  opacity:1;
+
+  transform:
+    translateX(0)
+    scale(1);
+}
+
+/* レイアウト */
+
+.layout{
+  position:relative;
+
+  width:100%;
+  height:100%;
+
+  display:flex;
+
+  z-index:5;
+}
+
+/* 左UI */
+
+.left-panel{
+
+  width:min(520px, 100%);
+
+  height:100%;
+
+  padding:20px;
+
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+/* ガラス */
+
+.glass{
+  background:var(--panel);
+
+  backdrop-filter:blur(var(--blur));
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  box-shadow:var(--shadow);
+}
+
+/* 上部 */
+
+.topbar{
+
+  border-radius:var(--radius);
+
+  padding:14px;
+}
+
+.title{
+  font-size:20px;
+  font-weight:700;
+  letter-spacing:.04em;
+
+  margin-bottom:10px;
+}
+
+.subtitle{
+  color:var(--sub);
+  font-size:13px;
+
+  margin-bottom:12px;
+}
+
+select{
+
+  width:100%;
+
+  border:none;
+  outline:none;
+
+  background:
+    rgba(255,255,255,.08);
+
+  color:white;
+
+  border-radius:14px;
+
+  padding:14px;
+
+  font-size:15px;
+}
+
+/* chat */
+
+.chat-wrap{
+  flex:1;
+
+  min-height:0;
+
+  border-radius:28px;
+
+  overflow:hidden;
+
+  display:flex;
+  flex-direction:column;
+}
+
+.chat{
+
+  flex:1;
+
+  overflow-y:auto;
+
+  padding:
+    18px
+    18px
+    100px;
+
+  scroll-behavior:smooth;
+}
+
+.chat::-webkit-scrollbar{
+  width:8px;
+}
+
+.chat::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,.14);
+  border-radius:999px;
+}
+
+/* message */
+
+.message-row{
+  display:flex;
+
+  margin-bottom:16px;
+}
+
+.message-row.user{
+  justify-content:flex-end;
+}
+
+.message{
+
+  max-width:88%;
+
+  padding:14px 16px;
+
+  border-radius:20px;
+
+  line-height:1.9;
+
+  white-space:pre-wrap;
+  word-break:break-word;
+
+  font-size:15px;
+}
+
+.message.user{
+  background:
+    linear-gradient(
+      135deg,
+      var(--accent),
+      var(--accent2)
+    );
+
+  box-shadow:
+    0 6px 20px rgba(255,79,163,.25);
+}
+
+.message.ai{
+  background:
+    rgba(255,255,255,.08);
+
+  border:
+    1px solid rgba(255,255,255,.06);
+}
+
+/* loading */
+
+.typing{
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+
+.dot{
+  width:8px;
+  height:8px;
+
+  border-radius:50%;
+
+  background:white;
+
+  opacity:.3;
+
+  animation:blink 1s infinite;
+}
+
+.dot:nth-child(2){
+  animation-delay:.15s;
+}
+
+.dot:nth-child(3){
+  animation-delay:.3s;
+}
+
+@keyframes blink{
+
+  0%,100%{
+    opacity:.25;
+    transform:translateY(0);
+  }
+
+  50%{
+    opacity:1;
+    transform:translateY(-3px);
+  }
+}
+
+/* 入力 */
+
+.inputbar{
+
+  padding:14px;
+
+  border-top:
+    1px solid rgba(255,255,255,.06);
+
+  display:flex;
+  gap:10px;
+}
+
+textarea{
+
+  flex:1;
+
+  height:58px;
+  max-height:140px;
+
+  resize:none;
+
+  border:none;
+  outline:none;
+
+  border-radius:16px;
+
+  background:
+    rgba(255,255,255,.08);
+
+  color:white;
+
+  padding:16px;
+
+  font-size:15px;
+  line-height:1.5;
+}
+
+button{
+
+  width:88px;
+
+  border:none;
+  border-radius:16px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--accent),
+      var(--accent2)
+    );
+
+  color:white;
+
+  font-size:15px;
+  font-weight:700;
+
+  cursor:pointer;
+
+  transition:
+    transform .15s ease,
+    opacity .15s ease;
+}
+
+button:hover{
+  transform:translateY(-1px);
+}
+
+button:active{
+  transform:scale(.98);
+}
+
+button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+/* mobile */
+
+@media(max-width:768px){
+
+  .left-panel{
+    width:100%;
+    padding:12px;
+  }
+
+  .character{
+
+    left:50%;
+    right:auto;
+
+    transform:
+      translateX(-50%)
+      scale(1.05);
+
+    max-width:100%;
+
+    opacity:.18;
+  }
+
+  .character.show{
+
+    transform:
+      translateX(-50%)
+      scale(1);
+  }
+
+  .message{
+    max-width:94%;
+  }
+
+  .title{
+    font-size:18px;
+  }
+
+  textarea{
+    font-size:16px;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="bg" class="bg"></div>
+
+<div class="character-wrap">
+  <img
+    id="characterImg"
+    class="character"
+  />
+</div>
+
+<div class="layout">
+
+  <div class="left-panel">
+
+    <div class="topbar glass">
+
+      <div class="title">
+        CINEMATIC AI CHAT
+      </div>
+
+      <div class="subtitle">
+        DeepSeek Pro Gravure Dialogue System
+      </div>
+
+      <select id="characterSelect">
+
+        <option value="normal">
+          ノーマル
+        </option>
+
+        <option value="manager">
+          マネージャー
+        </option>
+
+        <option value="aizawa">
+          相澤仁美
+        </option>
+
+        <option value="ogura">
+          小倉優香
+        </option>
+
+        <option value="enako">
+          えなこ
+        </option>
+
+      </select>
+
+    </div>
+
+    <div class="chat-wrap glass">
+
+      <div id="chat" class="chat"></div>
+
+      <div class="inputbar">
+
+        <textarea
+          id="input"
+          placeholder="メッセージを入力..."
+        ></textarea>
+
+        <button id="sendBtn">
+          送信
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
