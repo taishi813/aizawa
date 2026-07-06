@@ -101,7 +101,7 @@ module.exports = async function handler(req, res){
 
           temperature:0.9,
 
-          max_tokens:500
+          max_tokens:1500
         })
       }
     );
