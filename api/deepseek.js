@@ -1,4 +1,4 @@
-```js
+
 const https = require("https");
 
 module.exports = function handler(req, res) {
