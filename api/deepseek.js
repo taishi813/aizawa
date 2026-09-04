@@ -2,11 +2,7 @@
 const fs = require("fs");
 const path = require("path");
 
-module.exports = async function handler(req, res) {
-
-  /* =========================
-     CORS
-  =========================te */
+module.exports = async function handler(req, res){
 
   res.setHeader(
     "Access-Control-Allow-Origin",
@@ -23,21 +19,17 @@ module.exports = async function handler(req, res) {
     "Content-Type"
   );
 
-  if (req.method === "OPTIONS") {
+  if(req.method === "OPTIONS"){
     return res.status(200).end();
   }
 
-  if (req.method !== "POST") {
+  if(req.method !== "POST"){
     return res.status(405).json({
-      error: "Method not allowed"
+      error:"Method not allowed"
     });
   }
 
   try {
-
-    /* =========================
-       Request
-    ========================= */
 
     const {
       history = [],
@@ -45,20 +37,18 @@ module.exports = async function handler(req, res) {
     } = req.body || {};
 
 
-    /* =========================
-       Character Prompt
-    ========================= */
+    /* キャラプロンプト */
 
     let systemPrompt = "";
 
-    if (character !== "normal") {
+    if(character !== "normal"){
 
       const promptPath = path.join(
         process.cwd(),
         `${character}.txt`
       );
 
-      if (fs.existsSync(promptPath)) {
+      if(fs.existsSync(promptPath)){
 
         systemPrompt =
           fs.readFileSync(
@@ -69,29 +59,19 @@ module.exports = async function handler(req, res) {
     }
 
 
-    /* =========================
-       Messages
-    ========================= */
+    /* messages */
 
     const messages = [];
 
-    if (systemPrompt) {
+    if(systemPrompt){
 
       messages.push({
-        role: "system",
-        content: systemPrompt
+        role:"system",
+        content:systemPrompt
       });
     }
 
-    for (const msg of history) {
-
-      if (
-        !msg ||
-        !["user", "assistant"].includes(msg.role) ||
-        typeof msg.content !== "string"
-      ) {
-        continue;
-      }
+    for(const msg of history){
 
       messages.push({
         role: msg.role,
@@ -100,17 +80,17 @@ module.exports = async function handler(req, res) {
     }
 
 
-    /* =========================
-       DeepSeek API
-    ========================= */
+    /* DeepSeek API */
+
+    console.log("DeepSeek request start");
 
     const response = await fetch(
       "https://api.deepseek.com/chat/completions",
       {
-        method: "POST",
+        method:"POST",
 
-        headers: {
-          "Content-Type": "application/json",
+        headers:{
+          "Content-Type":"application/json",
 
           "Authorization":
             `Bearer ${process.env.DEEPSEEK_API_KEY}`
@@ -118,44 +98,69 @@ module.exports = async function handler(req, res) {
 
         body: JSON.stringify({
 
-          model: "deepseek-v4-pro",
+          model:"deepseek-v4-pro",
 
           messages,
 
           /*
-           * ここ重要。
-           * fetchで直接APIを叩いているので
-           * thinkingはトップレベル。
+           * V4 Pro
+           * thinking OFF
            */
-          thinking: {
-            type: "disabled"
+          thinking:{
+            type:"disabled"
           },
 
-          temperature: 0.9,
+          temperature:0.9,
 
-          max_tokens: 2000
+          max_tokens:1500
         })
       }
     );
 
-
-    /* =========================
-       Response JSON
-    ========================= */
-
-    const data =
-      await response.json();
+    console.log(
+      "DeepSeek HTTP status:",
+      response.status
+    );
 
 
-    /* =========================
-       DeepSeek API Error
-    ========================= */
+    /* DeepSeek response */
 
-    if (!response.ok) {
+    const raw =
+      await response.text();
+
+    console.log(
+      "DeepSeek raw response:",
+      raw
+    );
+
+
+    let data;
+
+    try {
+
+      data = JSON.parse(raw);
+
+    } catch(parseError){
+
+      console.error(
+        "DeepSeek JSON parse error:",
+        parseError
+      );
+
+      return res.status(502).json({
+        error:
+          "DeepSeekのレスポンスを解析できませんでした"
+      });
+    }
+
+
+    /* API error */
+
+    if(!response.ok){
 
       console.error(
         "DeepSeek API Error:",
-        JSON.stringify(data, null, 2)
+        data
       );
 
       return res.status(response.status).json({
@@ -167,136 +172,100 @@ module.exports = async function handler(req, res) {
     }
 
 
-    /* =========================
-       Response
-    ========================= */
-
-    const choice =
-      data?.choices?.[0];
-
-    const message =
-      choice?.message;
+    /* reply */
 
     const reply =
-      message?.content;
+      data?.choices?.[0]
+      ?.message
+      ?.content;
+
 
     console.log(
-      "DeepSeek:",
-      JSON.stringify({
-        model: data?.model,
-        finish_reason: choice?.finish_reason,
-        content_length:
-          typeof reply === "string"
-            ? reply.length
-            : null,
-        usage: data?.usage
-      })
+      "DeepSeek finish:",
+      data?.choices?.[0]?.finish_reason
     );
 
 
-    /* =========================
-       Empty Reply
-    ========================= */
-
-    if (
+    if(
       typeof reply !== "string" ||
       reply.trim() === ""
-    ) {
-
-      console.error(
-        "DeepSeek empty reply:",
-        JSON.stringify(data, null, 2)
-      );
+    ){
 
       return res.status(200).json({
-
-        reply:
-          "DeepSeekから返答がありませんでした"
+        reply:"DeepSeekから返答がありませんでした"
       });
     }
 
 
-    /* =========================
-       Supabase
-    ========================= */
+    /* Supabase */
 
     try {
 
       const latestUserMessage =
         history[history.length - 1]
-          ?.content || "";
+        ?.content || "";
 
-      if (
-        process.env.SUPABASE_URL &&
-        process.env.SUPABASE_ANON_KEY
-      ) {
+      await fetch(
 
-        await fetch(
+        process.env.SUPABASE_URL +
+        "/rest/v1/chat_logs",
 
-          process.env.SUPABASE_URL +
-          "/rest/v1/chat_logs",
+        {
+          method:"POST",
 
-          {
-            method: "POST",
+          headers:{
 
-            headers: {
+            "Content-Type":
+              "application/json",
 
-              "Content-Type":
-                "application/json",
+            "apikey":
+              process.env.SUPABASE_ANON_KEY,
 
-              "apikey":
-                process.env.SUPABASE_ANON_KEY,
+            "Authorization":
+              `Bearer ${process.env.SUPABASE_ANON_KEY}`,
 
-              "Authorization":
-                `Bearer ${process.env.SUPABASE_ANON_KEY}`,
+            "Prefer":
+              "return=minimal"
+          },
 
-              "Prefer":
-                "return=minimal"
-            },
+          body: JSON.stringify({
 
-            body: JSON.stringify({
+            character,
 
-              character,
+            user_message:
+              latestUserMessage,
 
-              user_message:
-                latestUserMessage,
+            ai_message:
+              reply
+          })
+        }
+      );
 
-              ai_message:
-                reply
-            })
-          }
-        );
-      }
-
-    } catch (dbErr) {
+    } catch(dbErr){
 
       console.error(
-        "Supabase保存失敗:",
+        "Supabase保存失敗",
         dbErr
       );
     }
 
 
-    /* =========================
-       Return
-    ========================= */
-
     return res.status(200).json({
-      reply: reply.trim()
+      reply:reply.trim()
     });
 
 
-  } catch (err) {
+  } catch(err){
 
     console.error(
-      "Server Error:",
+      "SERVER ERROR:",
       err
     );
 
     return res.status(500).json({
 
       error:
-        err?.message ||
+        err.message ||
         "Server Error"
     });
   }
