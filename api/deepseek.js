@@ -1,4 +1,4 @@
-```js
+
 module.exports = async function handler(req, res) {
 
   console.log("FUNCTION START");
