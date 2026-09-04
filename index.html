@@ -449,7 +449,7 @@ async function send(){
     loading.remove();
 
     addMessage(
-      "通信エラー",
+      "通信エラー" + error.message,
       "ai"
     );
   }
