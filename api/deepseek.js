@@ -1,7 +1,7 @@
-const fs = require("fs");
-const path = require("path");
+```js
+const https = require("https");
 
-module.exports = async function handler(req, res){
+module.exports = function handler(req, res) {
 
   /* CORS */
 
@@ -20,182 +20,354 @@ module.exports = async function handler(req, res){
     "Content-Type"
   );
 
+
+  /* OPTIONS */
+
   if(req.method === "OPTIONS"){
-    return res.status(200).end();
+    res.status(200).end();
+    return;
   }
+
+
+  /* POST only */
 
   if(req.method !== "POST"){
 
-    return res.status(405).json({
+    res.status(405).json({
       error:"Method not allowed"
     });
+
+    return;
   }
 
-  try {
 
-    const {
-      history = [],
-      character = "normal"
-    } = req.body || {};
+  /* API key */
 
-    /* キャラプロンプト */
+  const apiKey =
+    process.env.DEEPSEEK_API_KEY;
 
-    let systemPrompt = "";
 
-    if(character !== "normal"){
+  if(!apiKey){
 
-      const promptPath = path.join(
+    res.status(500).json({
+      error:"DEEPSEEK_API_KEY が設定されていません"
+    });
+
+    return;
+  }
+
+
+  /* Request body */
+
+  const body =
+    req.body || {};
+
+
+  const history =
+    Array.isArray(body.history)
+      ? body.history
+      : [];
+
+
+  const character =
+    body.character || "manager";
+
+
+  /* キャラクター用TXT */
+
+  const fs =
+    require("fs");
+
+  const path =
+    require("path");
+
+
+  let systemPrompt = "";
+
+
+  try{
+
+    const promptPath =
+      path.join(
         process.cwd(),
-        ${character}.txt
+        `${character}.txt`
       );
 
-      if(fs.existsSync(promptPath)){
 
-        systemPrompt =
-          fs.readFileSync(
-            promptPath,
-            "utf8"
-          );
-      }
+    if(fs.existsSync(promptPath)){
+
+      systemPrompt =
+        fs.readFileSync(
+          promptPath,
+          "utf8"
+        );
+
     }
 
-    /* messages */
+  }catch(err){
 
-    const messages = [];
+    console.error(
+      "キャラクターファイル読み込みエラー:",
+      err
+    );
 
-    if(systemPrompt){
+  }
 
-      messages.push({
-        role:"system",
-        content:systemPrompt
-      });
+
+  /* Messages */
+
+  const messages = [];
+
+
+  if(systemPrompt){
+
+    messages.push({
+      role:"system",
+      content:systemPrompt
+    });
+
+  }
+
+
+  for(const message of history){
+
+    if(
+      !message ||
+      typeof message.content !== "string"
+    ){
+
+      continue;
+
     }
 
-    for(const msg of history){
 
-      messages.push({
-        role: msg.role,
-        content: msg.content
-      });
+    if(
+      message.role !== "user" &&
+      message.role !== "assistant"
+    ){
+
+      continue;
+
     }
 
-    /* DeepSeek API */
 
-    const response = await fetch(
-      "https://api.deepseek.com/chat/completions",
-      {
-        method:"POST",
+    messages.push({
 
-        headers:{
-          "Content-Type":"application/json",
+      role:message.role,
 
-          "Authorization":
-            Bearer ${process.env.DEEPSEEK_API_KEY}
-        },
+      content:message.content
 
-        body: JSON.stringify({
+    });
 
-          model:"deepseek-v4-pro",
+  }
 
-          messages,
 
-          temperature:0.9,
+  /* DeepSeek request */
 
-          max_tokens:1500
-        })
+  const requestBody =
+    JSON.stringify({
+
+      model:"deepseek-v4-pro",
+
+      messages:messages,
+
+      thinking:{
+        type:"disabled"
+      },
+
+      temperature:0.9,
+
+      max_tokens:1500
+
+    });
+
+
+  const options = {
+
+    hostname:"api.deepseek.com",
+
+    path:"/chat/completions",
+
+    method:"POST",
+
+    headers:{
+
+      "Content-Type":
+        "application/json",
+
+      "Authorization":
+        `Bearer ${apiKey}`,
+
+      "Content-Length":
+        Buffer.byteLength(
+          requestBody
+        )
+
+    }
+
+  };
+
+
+  console.log(
+    "DeepSeek request start"
+  );
+
+
+  const request =
+    https.request(
+      options,
+      response => {
+
+        let raw = "";
+
+
+        response.on(
+          "data",
+          chunk => {
+
+            raw += chunk;
+
+          }
+        );
+
+
+        response.on(
+          "end",
+          () => {
+
+            console.log(
+              "DeepSeek status:",
+              response.statusCode
+            );
+
+
+            console.log(
+              "DeepSeek response:",
+              raw
+            );
+
+
+            let data;
+
+
+            try{
+
+              data =
+                JSON.parse(raw);
+
+            }catch(err){
+
+              res.status(502).json({
+
+                error:
+                  "DeepSeekから正常なJSONが返ってきませんでした"
+
+              });
+
+              return;
+
+            }
+
+
+            /* DeepSeek API error */
+
+            if(
+              response.statusCode < 200 ||
+              response.statusCode >= 300
+            ){
+
+              res.status(
+                response.statusCode
+              ).json({
+
+                error:
+                  data?.error?.message ||
+                  "DeepSeek API Error"
+
+              });
+
+              return;
+
+            }
+
+
+            /* Reply */
+
+            const reply =
+              data
+                ?.choices?.[0]
+                ?.message?.content;
+
+
+            if(
+              typeof reply !== "string" ||
+              reply.trim() === ""
+            ){
+
+              res.status(200).json({
+
+                reply:
+                  "DeepSeekから返答がありませんでした"
+
+              });
+
+              return;
+
+            }
+
+
+            /* Success */
+
+            res.status(200).json({
+
+              reply:
+                reply.trim()
+
+            });
+
+          }
+        );
+
+
       }
     );
 
-    const data =
-      await response.json();
 
-    if(!response.ok){
+  /* Request error */
 
-      console.error(data);
-
-      return res.status(500).json({
-
-        error:
-          data.error?.message ||
-          "DeepSeek API Error"
-      });
-    }
-
-    const reply =
-      data.choices?.[0]
-      ?.message
-      ?.content ||
-      "返答なし";
-
-    /* =========================
-       Supabase 保存
-    ========================= */
-
-    try {
-
-      const latestUserMessage =
-        history[history.length - 1]
-        ?.content || "";
-
-      await fetch(
-
-        process.env.SUPABASE_URL +
-        "/rest/v1/chat_logs",
-
-        {
-          method:"POST",
-
-          headers:{
-
-            "Content-Type":
-              "application/json",
-
-            "apikey":
-              process.env.SUPABASE_ANON_KEY,
-
-            "Authorization":
-              Bearer ${process.env.SUPABASE_ANON_KEY},
-
-            "Prefer":
-              "return=minimal"
-          },
-
-          body: JSON.stringify({
-
-            character,
-
-            user_message:
-              latestUserMessage,
-
-            ai_message:
-              reply
-          })
-        }
-      );
-
-    } catch(dbErr){
+  request.on(
+    "error",
+    err => {
 
       console.error(
-        "Supabase保存失敗",
-        dbErr
+        "DeepSeek request error:",
+        err
       );
+
+
+      if(!res.headersSent){
+
+        res.status(500).json({
+
+          error:
+            "DeepSeekへの接続に失敗しました"
+
+        });
+
+      }
+
     }
+  );
 
-    /* return */
 
-    return res.status(200).json({
-      reply
-    });
+  /* Send */
 
-  } catch(err){
+  request.write(
+    requestBody
+  );
 
-    console.error(err);
 
-    return res.status(500).json({
+  request.end();
 
-      error:
-        err.message ||
-        "Server Error"
-    });
-  }
 };
+```
