@@ -6,7 +6,7 @@ module.exports = async function handler(req, res) {
 
   /* =========================
      CORS
-  ========================= */
+  =========================te */
 
   res.setHeader(
     "Access-Control-Allow-Origin",
