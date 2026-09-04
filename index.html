@@ -1,8 +1,11 @@
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Titfuck AI Chat</title>
 
 <style>
@@ -181,9 +184,11 @@ button{
   .message{
     max-width:96%;
   }
+
 }
 
 </style>
+
 </head>
 
 <body>
@@ -202,11 +207,10 @@ button{
 
     <select id="characterSelect">
 
-
       <option value="manager">
         マネージャー
       </option>
-      
+
       <option value="aizawa">
         相澤仁美
       </option>
@@ -214,36 +218,36 @@ button{
       <option value="ogura">
         小倉優香
       </option>
-      
-            <option value="enako">
+
+      <option value="enako">
         えなこ
       </option>
-      
-                  <option value="wacchi">
+
+      <option value="wacchi">
         わちみなみ
       </option>
 
-       <option value="yanase">
+      <option value="yanase">
         柳瀬早紀
       </option>
-      
+
       <option value="ramu">
         RaMu
       </option>
-      
-            <option value="rika">
+
+      <option value="rika">
         泉里香
       </option>
-      
-                  <option value="io">
+
+      <option value="io">
         伊織いお
       </option>
-      
-                        <option value="fun">
+
+      <option value="fun">
         バトルファン
       </option>
 
-       <option value="fun2">
+      <option value="fun2">
         バトルファン２
       </option>
 
@@ -251,7 +255,9 @@ button{
 
   </div>
 
+
   <div id="chat" class="chat"></div>
+
 
   <div class="input-area">
 
@@ -267,6 +273,7 @@ button{
   </div>
 
 </div>
+
 
 <script>
 
@@ -289,6 +296,7 @@ const bg =
   document.getElementById("bg");
 
 let history = [];
+
 
 /* キャラ */
 
@@ -318,6 +326,7 @@ function applyCharacter(){
     `url('${char}.jpg')`;
 }
 
+
 characterSelect.addEventListener(
   "change",
   ()=>{
@@ -327,10 +336,13 @@ characterSelect.addEventListener(
     chat.innerHTML = "";
 
     applyCharacter();
+
   }
 );
 
+
 applyCharacter();
+
 
 /* メッセージ */
 
@@ -351,8 +363,11 @@ function addMessage(text,type){
 
     chat.scrollTop =
       chat.scrollHeight;
+
   });
+
 }
+
 
 /* 送信 */
 
@@ -365,19 +380,25 @@ async function send(){
     return;
   }
 
-  addMessage(text,"user");
+
+  addMessage(
+    text,
+    "user"
+  );
+
 
   input.value = "";
 
+
   history.push({
-
     role:"user",
-
     content:text
   });
 
+
   history =
     history.slice(-10);
+
 
   const loading =
     document.createElement("div");
@@ -390,7 +411,12 @@ async function send(){
 
   chat.appendChild(loading);
 
+
   try {
+
+    /*
+     * APIへ送信
+     */
 
     const response =
       await fetch(
@@ -410,50 +436,186 @@ async function send(){
 
             character:
               characterSelect.value
+
           })
+
         }
       );
 
-    const data =
-      await response.json();
+
+    /*
+     * まずJSONではなく
+     * textとして受け取る
+     *
+     * これにより、
+     * VercelがHTMLエラーなどを
+     * 返してきた場合でも中身を確認できる
+     */
+
+    const raw =
+      await response.text();
+
+
+    console.log(
+      "API status:",
+      response.status
+    );
+
+
+    console.log(
+      "API raw response:",
+      raw
+    );
+
 
     loading.remove();
+
+
+    /*
+     * JSONとして解析
+     */
+
+    let data;
+
+    try {
+
+      data =
+        JSON.parse(raw);
+
+    } catch(parseError){
+
+      console.error(
+        "JSON parse error:",
+        parseError
+      );
+
+
+      addMessage(
+
+        "APIからJSONではないレスポンスが返りました。\n\n" +
+
+        "HTTP Status: " +
+        response.status +
+
+        "\n\n" +
+
+        raw.substring(0,1000),
+
+        "ai"
+
+      );
+
+      return;
+
+    }
+
+
+    /*
+     * HTTPエラー
+     */
 
     if(!response.ok){
 
       addMessage(
-        "エラー: " +
-        (data.error || "unknown"),
+
+        "APIエラー:\n\n" +
+
+        (
+          data.error ||
+          "unknown"
+        ),
+
         "ai"
+
       );
 
       return;
+
     }
+
+
+    /*
+     * replyが存在するか確認
+     */
+
+    if(
+      !data.reply ||
+      typeof data.reply !== "string"
+    ){
+
+      addMessage(
+
+        "APIの返答にreplyがありません。\n\n" +
+
+        JSON.stringify(
+          data,
+          null,
+          2
+        ),
+
+        "ai"
+
+      );
+
+      return;
+
+    }
+
+
+    /*
+     * 正常レスポンス
+     */
 
     addMessage(
       data.reply,
       "ai"
     );
 
+
     history.push({
 
       role:"assistant",
 
-      content:data.reply
+      content:
+        data.reply
+
     });
+
 
   } catch(err){
 
-    console.error(err);
+    console.error(
+      "Fetch error:",
+      err
+    );
+
 
     loading.remove();
 
+
+    /*
+     * 通信そのものが失敗した場合
+     */
+
     addMessage(
-      "通信エラー" 
+
+      "通信エラー\n\n" +
+
+      "エラー内容: " +
+
+      (
+        err.message ||
+        err
+      ),
+
       "ai"
+
     );
+
   }
+
 }
+
 
 /* Enter */
 
@@ -470,9 +632,12 @@ input.addEventListener(
       e.preventDefault();
 
       send();
+
     }
+
   }
 );
+
 
 sendBtn.onclick = send;
 
@@ -480,3 +645,4 @@ sendBtn.onclick = send;
 
 </body>
 </html>
+```
