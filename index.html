@@ -3,10 +3,14 @@
 <html lang="ja">
 
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
 <title>Titfuck AI Chat</title>
+
 
 <style>
 
@@ -30,17 +34,26 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
 }
 
+
 /* 黒帯 */
 
 body::before,
 body::after{
+
   content:"";
+
   position:fixed;
+
   left:0;
+
   width:100%;
+
   height:60px;
+
   background:black;
+
   z-index:10;
+
 }
 
 body::before{
@@ -55,90 +68,117 @@ body::after{
 /* 背景 */
 
 .bg{
+
   position:fixed;
+
   inset:0;
 
   background:#111;
+
   background-size:cover;
+
   background-position:center;
 
-  filter:brightness(0.45) blur(10px);
+  filter:
+    brightness(0.45)
+    blur(10px);
 
   z-index:0;
+
 }
 
 
 /* キャラクター */
 
 .character{
+
   position:fixed;
 
   right:0;
+
   bottom:0;
 
   height:100%;
+
   max-width:55%;
 
   object-fit:contain;
 
   z-index:1;
+
   pointer-events:none;
+
 }
 
 
 /* UI */
 
 .left-panel{
+
   position:fixed;
 
   top:60px;
+
   bottom:60px;
+
   left:0;
 
   width:45%;
 
   display:flex;
+
   flex-direction:column;
 
   z-index:5;
+
 }
 
 
 .top-bar{
+
   padding:10px;
+
   background:var(--panel);
+
 }
 
 
 select{
+
   width:100%;
 
   padding:10px;
 
   border:none;
+
   border-radius:10px;
 
   font-size:16px;
+
 }
 
 
 .chat{
+
   flex:1;
 
   overflow-y:auto;
 
   padding:16px;
 
-  background:linear-gradient(
-    to right,
-    rgba(10,10,12,0.95),
-    rgba(10,10,12,0.72),
-    rgba(10,10,12,0)
-  );
+  background:
+    linear-gradient(
+      to right,
+      rgba(10,10,12,0.95),
+      rgba(10,10,12,0.72),
+      rgba(10,10,12,0)
+    );
+
 }
 
 
 .message{
+
   max-width:90%;
 
   margin-bottom:14px;
@@ -150,23 +190,33 @@ select{
   line-height:1.8;
 
   white-space:pre-wrap;
+
   word-break:break-word;
+
 }
 
 
 .user{
+
   background:var(--accent);
+
   margin-left:auto;
+
 }
 
 
 .ai{
-  background:rgba(255,255,255,0.14);
+
+  background:
+    rgba(255,255,255,0.14);
+
   backdrop-filter:blur(6px);
+
 }
 
 
 .input-area{
+
   display:flex;
 
   gap:10px;
@@ -174,10 +224,12 @@ select{
   padding:10px;
 
   background:var(--panel);
+
 }
 
 
 textarea{
+
   flex:1;
 
   height:60px;
@@ -185,6 +237,7 @@ textarea{
   resize:none;
 
   border:none;
+
   outline:none;
 
   border-radius:10px;
@@ -192,13 +245,16 @@ textarea{
   padding:10px;
 
   font-size:16px;
+
 }
 
 
 button{
+
   width:80px;
 
   border:none;
+
   border-radius:10px;
 
   background:var(--accent);
@@ -208,6 +264,7 @@ button{
   font-size:16px;
 
   cursor:pointer;
+
 }
 
 
@@ -217,28 +274,41 @@ button{
 
   body::before,
   body::after{
+
     height:40px;
+
   }
 
+
   .left-panel{
+
     width:100%;
 
     top:40px;
+
     bottom:40px;
+
   }
 
+
   .character{
+
     left:50%;
 
-    transform:translateX(-50%);
+    transform:
+      translateX(-50%);
 
     max-width:100%;
 
     opacity:0.22;
+
   }
 
+
   .message{
+
     max-width:96%;
+
   }
 
 }
@@ -251,17 +321,24 @@ button{
 <body>
 
 
-<div id="bg" class="bg"></div>
+<!-- 背景 -->
 
-<img
-  id="characterImg"
-  class="character"
-  style="display:none;"
->
+<div id="bg"
+     class="bg">
+</div>
+
+
+<!-- キャラクター -->
+
+<img id="characterImg"
+     class="character"
+     style="display:none;">
 
 
 <div class="left-panel">
 
+
+  <!-- キャラクター選択 -->
 
   <div class="top-bar">
 
@@ -316,15 +393,21 @@ button{
   </div>
 
 
-  <div id="chat" class="chat"></div>
+  <!-- チャット -->
 
+  <div id="chat"
+       class="chat">
+  </div>
+
+
+  <!-- 入力 -->
 
   <div class="input-area">
 
     <textarea
       id="input"
-      placeholder="メッセージ入力"
-    ></textarea>
+      placeholder="メッセージ入力">
+    </textarea>
 
     <button id="sendBtn">
       送信
@@ -339,30 +422,55 @@ button{
 <script>
 
 
+/* =========================
+   DOM
+========================= */
+
 const chat =
-  document.getElementById("chat");
+  document.getElementById(
+    "chat"
+  );
+
 
 const input =
-  document.getElementById("input");
+  document.getElementById(
+    "input"
+  );
+
 
 const sendBtn =
-  document.getElementById("sendBtn");
+  document.getElementById(
+    "sendBtn"
+  );
+
 
 const characterSelect =
-  document.getElementById("characterSelect");
+  document.getElementById(
+    "characterSelect"
+  );
+
 
 const characterImg =
-  document.getElementById("characterImg");
+  document.getElementById(
+    "characterImg"
+  );
+
 
 const bg =
-  document.getElementById("bg");
+  document.getElementById(
+    "bg"
+  );
 
+
+/* =========================
+   履歴
+========================= */
 
 let history = [];
 
 
 /* =========================
-   キャラクター変更
+   キャラクター
 ========================= */
 
 function applyCharacter(){
@@ -373,25 +481,27 @@ function applyCharacter(){
 
   if(char === "normal"){
 
-    characterImg.style.display = "none";
+    characterImg.style.display =
+      "none";
 
-    bg.style.backgroundImage = "none";
-    bg.style.background = "#111";
+    bg.style.backgroundImage =
+      "none";
+
+    bg.style.background =
+      "#111";
 
     return;
+
   }
 
 
-  characterImg.style.display = "block";
+  characterImg.style.display =
+    "block";
 
-
-  /* キャラクター画像 */
 
   characterImg.src =
     `${char}.png`;
 
-
-  /* 背景画像 */
 
   bg.style.backgroundImage =
     `url('${char}.jpg')`;
@@ -399,7 +509,7 @@ function applyCharacter(){
 }
 
 
-/* キャラクター変更時 */
+/* キャラクター変更 */
 
 characterSelect.addEventListener(
   "change",
@@ -415,7 +525,7 @@ characterSelect.addEventListener(
 );
 
 
-/* 初期キャラクター */
+/* 初期化 */
 
 applyCharacter();
 
@@ -430,7 +540,9 @@ function addMessage(
 ){
 
   const div =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
 
   div.className =
@@ -441,7 +553,9 @@ function addMessage(
     text;
 
 
-  chat.appendChild(div);
+  chat.appendChild(
+    div
+  );
 
 
   requestAnimationFrame(
@@ -457,7 +571,7 @@ function addMessage(
 
 
 /* =========================
-   メッセージ送信
+   送信
 ========================= */
 
 async function send(){
@@ -467,11 +581,13 @@ async function send(){
 
 
   if(!text){
+
     return;
+
   }
 
 
-  /* ユーザー発言 */
+  /* ユーザー */
 
   addMessage(
     text,
@@ -485,12 +601,13 @@ async function send(){
   /* 履歴 */
 
   history.push({
+
     role:"user",
+
     content:text
+
   });
 
-
-  /* 直近10件だけ */
 
   history =
     history.slice(-10);
@@ -499,7 +616,9 @@ async function send(){
   /* ローディング */
 
   const loading =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
 
   loading.className =
@@ -517,48 +636,152 @@ async function send(){
 
   try{
 
+    console.log(
+      "API request start"
+    );
+
+
+    /* API */
+
     const response =
       await fetch(
         window.location.origin +
         "/api/deepseek",
         {
+
           method:"POST",
 
           headers:{
+
             "Content-Type":
               "application/json"
+
           },
 
-          body:JSON.stringify({
-            history,
-            character:
-              characterSelect.value
-          })
+          body:
+            JSON.stringify({
+
+              history:history,
+
+              character:
+                characterSelect.value
+
+            })
+
         }
       );
 
 
-    const data =
-      await response.json();
+    console.log(
+      "API status:",
+      response.status
+    );
+
+
+    /* まずtextとして取得 */
+
+    const raw =
+      await response.text();
+
+
+    console.log(
+      "API raw response:",
+      raw
+    );
 
 
     loading.remove();
 
 
-    if(!response.ok){
+    /* =====================
+       JSON解析
+    ===================== */
+
+    let data;
+
+
+    try{
+
+      data =
+        JSON.parse(raw);
+
+    }catch(parseError){
 
       addMessage(
-        "エラー: " +
-        (
-          data.error ||
-          "unknown"
-        ),
+
+        "APIからJSONではないレスポンスが返りました。\n\n" +
+
+        "HTTP Status: " +
+        response.status +
+
+        "\n\n" +
+
+        raw,
+
         "ai"
+
       );
 
       return;
+
     }
 
+
+    /* =====================
+       HTTPエラー
+    ===================== */
+
+    if(!response.ok){
+
+      addMessage(
+
+        "APIエラー:\n\n" +
+
+        (
+          data.error ||
+          "unknown error"
+        ),
+
+        "ai"
+
+      );
+
+      return;
+
+    }
+
+
+    /* =====================
+       reply確認
+    ===================== */
+
+    if(
+      typeof data.reply !==
+      "string"
+    ){
+
+      addMessage(
+
+        "APIレスポンスに reply がありません。\n\n" +
+
+        JSON.stringify(
+          data,
+          null,
+          2
+        ),
+
+        "ai"
+
+      );
+
+      return;
+
+    }
+
+
+    /* =====================
+       正常
+    ===================== */
 
     addMessage(
       data.reply,
@@ -567,15 +790,18 @@ async function send(){
 
 
     history.push({
+
       role:"assistant",
+
       content:data.reply
+
     });
 
 
   }catch(err){
 
     console.error(
-      "通信エラー:",
+      "FETCH ERROR:",
       err
     );
 
@@ -584,8 +810,16 @@ async function send(){
 
 
     addMessage(
-      "通信エラー",
+
+      "FETCHエラー\n\n" +
+
+      (
+        err.message ||
+        String(err)
+      ),
+
       "ai"
+
     );
 
   }
@@ -594,7 +828,7 @@ async function send(){
 
 
 /* =========================
-   Enter送信
+   Enter
 ========================= */
 
 input.addEventListener(
@@ -602,9 +836,13 @@ input.addEventListener(
   e => {
 
     if(
+
       e.key === "Enter" &&
+
       !e.shiftKey &&
+
       !e.isComposing
+
     ){
 
       e.preventDefault();
@@ -617,7 +855,9 @@ input.addEventListener(
 );
 
 
-/* 送信ボタン */
+/* =========================
+   ボタン
+========================= */
 
 sendBtn.onclick =
   send;
