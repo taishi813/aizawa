@@ -370,4 +370,3 @@ module.exports = function handler(req, res) {
   request.end();
 
 };
-```
