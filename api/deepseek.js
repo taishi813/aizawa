@@ -53,15 +53,9 @@ module.exports = async function handler(req, res) {
 
     if (character !== "normal") {
 
-      // character はファイル名として使うので
-      // 想定外の文字を除去
-      const safeCharacter =
-        String(character)
-          .replace(/[^a-zA-Z0-9_-]/g, "");
-
       const promptPath = path.join(
         process.cwd(),
-        `${safeCharacter}.txt`
+        `${character}.txt`
       );
 
       if (fs.existsSync(promptPath)) {
@@ -89,36 +83,20 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // フロントから来たhistoryを検証
-    if (Array.isArray(history)) {
+    for (const msg of history) {
 
-      for (const msg of history) {
-
-        if (!msg) continue;
-
-        const role = msg.role;
-        const content = msg.content;
-
-        // Chat Completionsで許可するroleのみ
-        if (
-          role !== "user" &&
-          role !== "assistant"
-        ) {
-          continue;
-        }
-
-        if (
-          typeof content !== "string" ||
-          content.trim() === ""
-        ) {
-          continue;
-        }
-
-        messages.push({
-          role,
-          content
-        });
+      if (
+        !msg ||
+        !["user", "assistant"].includes(msg.role) ||
+        typeof msg.content !== "string"
+      ) {
+        continue;
       }
+
+      messages.push({
+        role: msg.role,
+        content: msg.content
+      });
     }
 
 
@@ -140,23 +118,21 @@ module.exports = async function handler(req, res) {
 
         body: JSON.stringify({
 
-          // 現行V4 Pro
           model: "deepseek-v4-pro",
 
           messages,
 
-          // キャラチャットではthinkingをOFF
-          // → 応答速度と安定性を優先
-          extra_body: {
-            thinking: {
-              type: "disabled"
-            }
+          /*
+           * ここ重要。
+           * fetchで直接APIを叩いているので
+           * thinkingはトップレベル。
+           */
+          thinking: {
+            type: "disabled"
           },
 
-          // thinking OFFなのでtemperature使用可能
           temperature: 0.9,
 
-          // 1500 → 2000 に少し余裕を持たせる
           max_tokens: 2000
         })
       }
@@ -164,30 +140,15 @@ module.exports = async function handler(req, res) {
 
 
     /* =========================
-       DeepSeek Response
+       Response JSON
     ========================= */
 
-    let data;
-
-    try {
-
-      data = await response.json();
-
-    } catch (jsonErr) {
-
-      console.error(
-        "DeepSeek JSON parse error:",
-        jsonErr
-      );
-
-      return res.status(502).json({
-        error: "DeepSeekから不正なレスポンスが返されました"
-      });
-    }
+    const data =
+      await response.json();
 
 
     /* =========================
-       API Error
+       DeepSeek API Error
     ========================= */
 
     if (!response.ok) {
@@ -197,17 +158,17 @@ module.exports = async function handler(req, res) {
         JSON.stringify(data, null, 2)
       );
 
-      return res.status(500).json({
+      return res.status(response.status).json({
 
         error:
           data?.error?.message ||
-          `DeepSeek API Error (${response.status})`
+          "DeepSeek API Error"
       });
     }
 
 
     /* =========================
-       Extract Response
+       Response
     ========================= */
 
     const choice =
@@ -216,25 +177,17 @@ module.exports = async function handler(req, res) {
     const message =
       choice?.message;
 
-    const finishReason =
-      choice?.finish_reason;
-
-    const content =
+    const reply =
       message?.content;
-
-
-    /* =========================
-       Debug Log
-    ========================= */
 
     console.log(
       "DeepSeek:",
       JSON.stringify({
         model: data?.model,
-        finish_reason: finishReason,
+        finish_reason: choice?.finish_reason,
         content_length:
-          typeof content === "string"
-            ? content.length
+          typeof reply === "string"
+            ? reply.length
             : null,
         usage: data?.usage
       })
@@ -242,78 +195,37 @@ module.exports = async function handler(req, res) {
 
 
     /* =========================
-       Empty Response Handling
+       Empty Reply
     ========================= */
 
     if (
-      typeof content !== "string" ||
-      content.trim() === ""
+      typeof reply !== "string" ||
+      reply.trim() === ""
     ) {
 
       console.error(
-        "DeepSeek returned empty content:",
-        JSON.stringify({
-          finish_reason: finishReason,
-          message,
-          usage: data?.usage
-        }, null, 2)
+        "DeepSeek empty reply:",
+        JSON.stringify(data, null, 2)
       );
 
-      let errorMessage =
-        "DeepSeekから返答がありませんでした";
-
-      if (finishReason === "length") {
-
-        errorMessage =
-          "DeepSeekの生成上限に達しました";
-
-      } else if (
-        finishReason === "content_filter"
-      ) {
-
-        errorMessage =
-          "DeepSeekのコンテンツフィルターにより返答できませんでした";
-
-      } else if (
-        finishReason === "insufficient_system_resource"
-      ) {
-
-        errorMessage =
-          "DeepSeek側の推論リソース不足で処理が中断されました";
-      }
-
-      /*
-       * フロントは data.reply を表示する仕様なので、
-       * ここでは従来どおりreplyとして返す。
-       */
       return res.status(200).json({
-        reply: errorMessage
+
+        reply:
+          "DeepSeekから返答がありませんでした"
       });
     }
 
 
     /* =========================
-       Final Reply
-    ========================= */
-
-    const reply =
-      content.trim();
-
-
-    /* =========================
-       Supabase 保存
+       Supabase
     ========================= */
 
     try {
 
       const latestUserMessage =
-        Array.isArray(history) &&
-        history.length > 0
-          ? history[history.length - 1]?.content || ""
-          : "";
+        history[history.length - 1]
+          ?.content || "";
 
-      // Supabase環境変数がない場合は
-      // 保存処理自体をスキップ
       if (
         process.env.SUPABASE_URL &&
         process.env.SUPABASE_ANON_KEY
@@ -358,7 +270,6 @@ module.exports = async function handler(req, res) {
 
     } catch (dbErr) {
 
-      // DB保存失敗でチャットまで失敗させない
       console.error(
         "Supabase保存失敗:",
         dbErr
@@ -371,7 +282,7 @@ module.exports = async function handler(req, res) {
     ========================= */
 
     return res.status(200).json({
-      reply
+      reply: reply.trim()
     });
 
 
