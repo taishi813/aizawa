@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 
@@ -9,14 +8,17 @@
 <meta name="viewport"
       content="width=device-width, initial-scale=1.0">
 
-<title>Titfuck AI Chat</title>
+<title>AI Chat</title>
 
 
 <style>
 
 :root{
-  --panel: rgba(10,10,12,0.88);
-  --accent: #ff4fa3;
+  --panel: rgba(255,255,255,0.94);
+  --accent: #1976d2;
+  --accent-light: #eaf3ff;
+  --border: #d5e2f0;
+  --text: #17212b;
 }
 
 *{
@@ -29,13 +31,13 @@ body{
   width:100%;
   height:100%;
   overflow:hidden;
-  background:black;
-  color:white;
+  background:#ffffff;
+  color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
 }
 
 
-/* 黒帯 */
+/* 上下の帯 */
 
 body::before,
 body::after{
@@ -50,7 +52,7 @@ body::after{
 
   height:60px;
 
-  background:black;
+  background:#ffffff;
 
   z-index:10;
 
@@ -73,14 +75,14 @@ body::after{
 
   inset:0;
 
-  background:#111;
+  background:#eef5fb;
 
   background-size:cover;
 
   background-position:center;
 
   filter:
-    brightness(0.45)
+    brightness(0.8)
     blur(10px);
 
   z-index:0;
@@ -134,14 +136,82 @@ body::after{
 }
 
 
+/* キャラクター選択 */
+
 .top-bar{
 
   padding:10px;
 
   background:var(--panel);
 
+  border-bottom:1px solid var(--border);
+
 }
 
+
+/* 基本プロンプト */
+
+.prompt-area{
+
+  padding:10px;
+
+  background:#ffffff;
+
+  border-bottom:1px solid var(--border);
+
+}
+
+
+.prompt-label{
+
+  font-size:13px;
+
+  font-weight:bold;
+
+  color:#1976d2;
+
+  margin-bottom:6px;
+
+}
+
+
+#prompt{
+
+  width:100%;
+
+  height:120px;
+
+  resize:vertical;
+
+  border:1px solid var(--border);
+
+  border-radius:10px;
+
+  padding:10px;
+
+  outline:none;
+
+  font-size:14px;
+
+  line-height:1.6;
+
+  color:var(--text);
+
+  background:#f8fbff;
+
+}
+
+
+#prompt:focus{
+
+  border-color:var(--accent);
+
+  background:#ffffff;
+
+}
+
+
+/* select */
 
 select{
 
@@ -149,14 +219,20 @@ select{
 
   padding:10px;
 
-  border:none;
+  border:1px solid var(--border);
 
   border-radius:10px;
 
   font-size:16px;
 
+  background:#ffffff;
+
+  color:var(--text);
+
 }
 
+
+/* チャット */
 
 .chat{
 
@@ -169,13 +245,15 @@ select{
   background:
     linear-gradient(
       to right,
-      rgba(10,10,12,0.95),
-      rgba(10,10,12,0.72),
-      rgba(10,10,12,0)
+      rgba(255,255,255,0.96),
+      rgba(255,255,255,0.78),
+      rgba(255,255,255,0)
     );
 
 }
 
+
+/* メッセージ */
 
 .message{
 
@@ -200,6 +278,8 @@ select{
 
   background:var(--accent);
 
+  color:white;
+
   margin-left:auto;
 
 }
@@ -207,13 +287,16 @@ select{
 
 .ai{
 
-  background:
-    rgba(255,255,255,0.14);
+  background:rgba(255,255,255,0.9);
+
+  border:1px solid var(--border);
 
   backdrop-filter:blur(6px);
 
 }
 
+
+/* 入力 */
 
 .input-area{
 
@@ -223,12 +306,14 @@ select{
 
   padding:10px;
 
-  background:var(--panel);
+  background:#ffffff;
+
+  border-top:1px solid var(--border);
 
 }
 
 
-textarea{
+textarea#input{
 
   flex:1;
 
@@ -236,7 +321,7 @@ textarea{
 
   resize:none;
 
-  border:none;
+  border:1px solid var(--border);
 
   outline:none;
 
@@ -245,6 +330,17 @@ textarea{
   padding:10px;
 
   font-size:16px;
+
+  color:var(--text);
+
+  background:#ffffff;
+
+}
+
+
+textarea#input:focus{
+
+  border-color:var(--accent);
 
 }
 
@@ -264,6 +360,13 @@ button{
   font-size:16px;
 
   cursor:pointer;
+
+}
+
+
+button:hover{
+
+  opacity:0.9;
 
 }
 
@@ -300,7 +403,21 @@ button{
 
     max-width:100%;
 
-    opacity:0.22;
+    opacity:0.18;
+
+  }
+
+
+  .prompt-area{
+
+    padding:8px;
+
+  }
+
+
+  #prompt{
+
+    height:100px;
 
   }
 
@@ -393,6 +510,21 @@ button{
   </div>
 
 
+  <!-- 基本プロンプト -->
+
+  <div class="prompt-area">
+
+    <div class="prompt-label">
+      基本プロンプト
+    </div>
+
+    <textarea id="prompt"
+      placeholder="このキャラクターの基本設定を入力">
+    </textarea>
+
+  </div>
+
+
   <!-- チャット -->
 
   <div id="chat"
@@ -438,6 +570,12 @@ const input =
   );
 
 
+const prompt =
+  document.getElementById(
+    "prompt"
+  );
+
+
 const sendBtn =
   document.getElementById(
     "sendBtn"
@@ -473,7 +611,7 @@ let history = [];
    キャラクター
 ========================= */
 
-function applyCharacter(){
+async function applyCharacter(){
 
   const char =
     characterSelect.value;
@@ -488,7 +626,9 @@ function applyCharacter(){
       "none";
 
     bg.style.background =
-      "#111";
+      "#eef5fb";
+
+    prompt.value = "";
 
     return;
 
@@ -506,10 +646,49 @@ function applyCharacter(){
   bg.style.backgroundImage =
     `url('${char}.jpg')`;
 
+
+  /* =====================
+     基本プロンプト読み込み
+  ===================== */
+
+  try{
+
+    const response =
+      await fetch(
+        `${char}.txt`
+      );
+
+
+    if(response.ok){
+
+      prompt.value =
+        await response.text();
+
+    }else{
+
+      prompt.value =
+        "";
+
+    }
+
+  }catch(err){
+
+    console.error(
+      "PROMPT LOAD ERROR:",
+      err
+    );
+
+    prompt.value =
+      "";
+
+  }
+
 }
 
 
-/* キャラクター変更 */
+/* =========================
+   キャラクター変更
+========================= */
 
 characterSelect.addEventListener(
   "change",
@@ -525,7 +704,9 @@ characterSelect.addEventListener(
 );
 
 
-/* 初期化 */
+/* =========================
+   初期化
+========================= */
 
 applyCharacter();
 
@@ -636,12 +817,9 @@ async function send(){
 
   try{
 
-    console.log(
-      "API request start"
-    );
-
-
-    /* API */
+    /* =====================
+       API
+    ===================== */
 
     const response =
       await fetch(
@@ -664,7 +842,10 @@ async function send(){
               history:history,
 
               character:
-                characterSelect.value
+                characterSelect.value,
+
+              prompt:
+                prompt.value
 
             })
 
@@ -672,30 +853,16 @@ async function send(){
       );
 
 
-    console.log(
-      "API status:",
-      response.status
-    );
-
-
-    /* まずtextとして取得 */
+    /* textとして取得 */
 
     const raw =
       await response.text();
 
 
-    console.log(
-      "API raw response:",
-      raw
-    );
-
-
     loading.remove();
 
 
-    /* =====================
-       JSON解析
-    ===================== */
+    /* JSON解析 */
 
     let data;
 
@@ -727,9 +894,7 @@ async function send(){
     }
 
 
-    /* =====================
-       HTTPエラー
-    ===================== */
+    /* HTTPエラー */
 
     if(!response.ok){
 
@@ -751,9 +916,7 @@ async function send(){
     }
 
 
-    /* =====================
-       reply確認
-    ===================== */
+    /* reply確認 */
 
     if(
       typeof data.reply !==
@@ -779,9 +942,7 @@ async function send(){
     }
 
 
-    /* =====================
-       正常
-    ===================== */
+    /* 正常 */
 
     addMessage(
       data.reply,
