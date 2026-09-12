@@ -1,9 +1,10 @@
-
 const https = require("https");
 
 module.exports = function handler(req, res) {
 
-  /* CORS */
+  /* =========================
+     CORS
+  ========================= */
 
   res.setHeader(
     "Access-Control-Allow-Origin",
@@ -21,15 +22,22 @@ module.exports = function handler(req, res) {
   );
 
 
-  /* OPTIONS */
+  /* =========================
+     OPTIONS
+  ========================= */
 
   if(req.method === "OPTIONS"){
+
     res.status(200).end();
+
     return;
+
   }
 
 
-  /* POST only */
+  /* =========================
+     POST only
+  ========================= */
 
   if(req.method !== "POST"){
 
@@ -38,10 +46,13 @@ module.exports = function handler(req, res) {
     });
 
     return;
+
   }
 
 
-  /* API key */
+  /* =========================
+     API key
+  ========================= */
 
   const apiKey =
     process.env.DEEPSEEK_API_KEY;
@@ -50,14 +61,18 @@ module.exports = function handler(req, res) {
   if(!apiKey){
 
     res.status(500).json({
-      error:"DEEPSEEK_API_KEY が設定されていません"
+      error:
+        "DEEPSEEK_API_KEY が設定されていません"
     });
 
     return;
+
   }
 
 
-  /* Request body */
+  /* =========================
+     Request body
+  ========================= */
 
   const body =
     req.body || {};
@@ -73,61 +88,98 @@ module.exports = function handler(req, res) {
     body.character || "manager";
 
 
-  /* キャラクター用TXT */
+  /*
+   * フロント側から送られてきた
+   * 編集済み基本プロンプト
+   */
 
-  const fs =
-    require("fs");
-
-  const path =
-    require("path");
-
-
-  let systemPrompt = "";
-
-
-  try{
-
-    const promptPath =
-      path.join(
-        process.cwd(),
-        `${character}.txt`
-      );
+  const clientPrompt =
+    typeof body.prompt === "string"
+      ? body.prompt.trim()
+      : "";
 
 
-    if(fs.existsSync(promptPath)){
+  /* =========================
+     System Prompt
+  ========================= */
 
-      systemPrompt =
-        fs.readFileSync(
-          promptPath,
-          "utf8"
+  let systemPrompt =
+    clientPrompt;
+
+
+  /*
+   * promptが空の場合だけ
+   * 従来どおりTXTから読み込む
+   */
+
+  if(!systemPrompt){
+
+    const fs =
+      require("fs");
+
+    const path =
+      require("path");
+
+
+    try{
+
+      const promptPath =
+        path.join(
+          process.cwd(),
+          `${character}.txt`
         );
 
+
+      if(fs.existsSync(promptPath)){
+
+        systemPrompt =
+          fs.readFileSync(
+            promptPath,
+            "utf8"
+          ).trim();
+
+      }
+
+    }catch(err){
+
+      console.error(
+        "キャラクターファイル読み込みエラー:",
+        err
+      );
+
     }
-
-  }catch(err){
-
-    console.error(
-      "キャラクターファイル読み込みエラー:",
-      err
-    );
 
   }
 
 
-  /* Messages */
+  /* =========================
+     Messages
+  ========================= */
 
   const messages = [];
 
 
+  /*
+   * 基本プロンプトを
+   * system messageとして使用
+   */
+
   if(systemPrompt){
 
     messages.push({
+
       role:"system",
+
       content:systemPrompt
+
     });
 
   }
 
+
+  /*
+   * 会話履歴
+   */
 
   for(const message of history){
 
@@ -162,7 +214,9 @@ module.exports = function handler(req, res) {
   }
 
 
-  /* DeepSeek request */
+  /* =========================
+     DeepSeek request
+  ========================= */
 
   const requestBody =
     JSON.stringify({
@@ -269,7 +323,9 @@ module.exports = function handler(req, res) {
             }
 
 
-            /* DeepSeek API error */
+            /* =====================
+               DeepSeek API error
+            ===================== */
 
             if(
               response.statusCode < 200 ||
@@ -291,7 +347,9 @@ module.exports = function handler(req, res) {
             }
 
 
-            /* Reply */
+            /* =====================
+               Reply
+            ===================== */
 
             const reply =
               data
@@ -316,7 +374,9 @@ module.exports = function handler(req, res) {
             }
 
 
-            /* Success */
+            /* =====================
+               Success
+            ===================== */
 
             res.status(200).json({
 
@@ -328,12 +388,13 @@ module.exports = function handler(req, res) {
           }
         );
 
-
       }
     );
 
 
-  /* Request error */
+  /* =========================
+     Request error
+  ========================= */
 
   request.on(
     "error",
@@ -360,7 +421,9 @@ module.exports = function handler(req, res) {
   );
 
 
-  /* Send */
+  /* =========================
+     Send
+  ========================= */
 
   request.write(
     requestBody
