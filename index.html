@@ -37,7 +37,9 @@ body{
 }
 
 
-/* 上下の帯 */
+/* =========================
+   上下の帯
+========================= */
 
 body::before,
 body::after{
@@ -67,7 +69,9 @@ body::after{
 }
 
 
-/* 背景 */
+/* =========================
+   背景
+========================= */
 
 .bg{
 
@@ -90,7 +94,9 @@ body::after{
 }
 
 
-/* キャラクター */
+/* =========================
+   キャラクター
+========================= */
 
 .character{
 
@@ -113,7 +119,9 @@ body::after{
 }
 
 
-/* UI */
+/* =========================
+   UI
+========================= */
 
 .left-panel{
 
@@ -136,7 +144,9 @@ body::after{
 }
 
 
-/* キャラクター選択 */
+/* =========================
+   キャラクター選択
+========================= */
 
 .top-bar{
 
@@ -149,7 +159,9 @@ body::after{
 }
 
 
-/* 基本プロンプト */
+/* =========================
+   基本プロンプト
+========================= */
 
 .prompt-area{
 
@@ -211,7 +223,9 @@ body::after{
 }
 
 
-/* select */
+/* =========================
+   select
+========================= */
 
 select{
 
@@ -232,7 +246,9 @@ select{
 }
 
 
-/* チャット */
+/* =========================
+   チャット
+========================= */
 
 .chat{
 
@@ -253,7 +269,9 @@ select{
 }
 
 
-/* メッセージ */
+/* =========================
+   メッセージ
+========================= */
 
 .message{
 
@@ -296,7 +314,85 @@ select{
 }
 
 
-/* 入力 */
+/* =========================
+   画像プレビュー
+========================= */
+
+.image-preview-area{
+
+  display:none;
+
+  padding:8px 10px;
+
+  background:#ffffff;
+
+  border-top:1px solid var(--border);
+
+}
+
+
+.image-preview-container{
+
+  position:relative;
+
+  display:inline-block;
+
+}
+
+
+#imagePreview{
+
+  display:block;
+
+  max-width:180px;
+
+  max-height:120px;
+
+  border-radius:10px;
+
+  border:1px solid var(--border);
+
+  object-fit:contain;
+
+}
+
+
+#removeImageBtn{
+
+  position:absolute;
+
+  top:-7px;
+
+  right:-7px;
+
+  width:24px;
+
+  height:24px;
+
+  padding:0;
+
+  border:none;
+
+  border-radius:50%;
+
+  background:#ffffff;
+
+  color:#555;
+
+  border:1px solid var(--border);
+
+  font-size:16px;
+
+  line-height:22px;
+
+  cursor:pointer;
+
+}
+
+
+/* =========================
+   入力
+========================= */
 
 .input-area{
 
@@ -345,9 +441,56 @@ textarea#input:focus{
 }
 
 
-button{
+/* =========================
+   画像ボタン
+========================= */
+
+#imageBtn{
+
+  width:52px;
+
+  flex-shrink:0;
+
+  border:1px solid var(--border);
+
+  border-radius:10px;
+
+  background:#f8fbff;
+
+  color:var(--accent);
+
+  font-size:24px;
+
+  cursor:pointer;
+
+}
+
+
+#imageBtn:hover{
+
+  background:var(--accent-light);
+
+}
+
+
+/* 実際のファイル入力は非表示 */
+
+#imageInput{
+
+  display:none;
+
+}
+
+
+/* =========================
+   送信ボタン
+========================= */
+
+#sendBtn{
 
   width:80px;
+
+  flex-shrink:0;
 
   border:none;
 
@@ -364,14 +507,16 @@ button{
 }
 
 
-button:hover{
+#sendBtn:hover{
 
   opacity:0.9;
 
 }
 
 
-/* スマホ */
+/* =========================
+   スマホ
+========================= */
 
 @media (max-width:768px){
 
@@ -428,6 +573,29 @@ button:hover{
 
   }
 
+
+  #imagePreview{
+
+    max-width:140px;
+
+    max-height:100px;
+
+  }
+
+
+  #imageBtn{
+
+    width:48px;
+
+  }
+
+
+  #sendBtn{
+
+    width:70px;
+
+  }
+
 }
 
 </style>
@@ -438,14 +606,18 @@ button:hover{
 <body>
 
 
-<!-- 背景 -->
+<!-- =========================
+     背景
+========================= -->
 
 <div id="bg"
      class="bg">
 </div>
 
 
-<!-- キャラクター -->
+<!-- =========================
+     キャラクター
+========================= -->
 
 <img id="characterImg"
      class="character"
@@ -455,7 +627,9 @@ button:hover{
 <div class="left-panel">
 
 
-  <!-- キャラクター選択 -->
+  <!-- =====================
+       キャラクター選択
+  ====================== -->
 
   <div class="top-bar">
 
@@ -502,7 +676,9 @@ button:hover{
   </div>
 
 
-  <!-- 基本プロンプト -->
+  <!-- =====================
+       基本プロンプト
+  ====================== -->
 
   <div class="prompt-area">
 
@@ -510,32 +686,89 @@ button:hover{
       基本プロンプト
     </div>
 
-    <textarea id="prompt"
-      placeholder="このキャラクターの基本設定を入力">
-    </textarea>
+    <textarea
+      id="prompt"
+      placeholder="このキャラクターの基本設定を入力"></textarea>
 
   </div>
 
 
-  <!-- チャット -->
+  <!-- =====================
+       チャット
+  ====================== -->
 
   <div id="chat"
        class="chat">
   </div>
 
 
-  <!-- 入力 -->
+  <!-- =====================
+       画像プレビュー
+  ====================== -->
+
+  <div
+    id="imagePreviewArea"
+    class="image-preview-area">
+
+    <div class="image-preview-container">
+
+      <img
+        id="imagePreview"
+        alt="画像プレビュー">
+
+      <button
+        id="removeImageBtn"
+        type="button">
+        ×
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================
+       入力
+  ====================== -->
 
   <div class="input-area">
 
+
+    <!-- 画像選択 -->
+
+    <button
+      id="imageBtn"
+      type="button"
+      title="画像を選択">
+
+      📷
+
+    </button>
+
+
+    <input
+      id="imageInput"
+      type="file"
+      accept="image/jpeg,image/png,image/gif,image/webp">
+
+
+    <!-- テキスト入力 -->
+
     <textarea
       id="input"
-      placeholder="メッセージ入力">
-    </textarea>
+      placeholder="メッセージ入力"></textarea>
 
-    <button id="sendBtn">
+
+    <!-- 送信 -->
+
+    <button
+      id="sendBtn"
+      type="button">
+
       送信
+
     </button>
+
 
   </div>
 
@@ -592,11 +825,48 @@ const bg =
   );
 
 
+const imageBtn =
+  document.getElementById(
+    "imageBtn"
+  );
+
+
+const imageInput =
+  document.getElementById(
+    "imageInput"
+  );
+
+
+const imagePreviewArea =
+  document.getElementById(
+    "imagePreviewArea"
+  );
+
+
+const imagePreview =
+  document.getElementById(
+    "imagePreview"
+  );
+
+
+const removeImageBtn =
+  document.getElementById(
+    "removeImageBtn"
+  );
+
+
 /* =========================
    履歴
 ========================= */
 
 let history = [];
+
+
+/* =========================
+   現在選択されている画像
+========================= */
+
+let selectedImage = null;
 
 
 /* =========================
@@ -690,6 +960,8 @@ characterSelect.addEventListener(
 
     chat.innerHTML = "";
 
+    removeSelectedImage();
+
     applyCharacter();
 
   }
@@ -744,6 +1016,133 @@ function addMessage(
 
 
 /* =========================
+   画像選択
+========================= */
+
+imageBtn.addEventListener(
+  "click",
+  () => {
+
+    imageInput.click();
+
+  }
+);
+
+
+/* =========================
+   画像読み込み
+========================= */
+
+imageInput.addEventListener(
+  "change",
+  () => {
+
+    const file =
+      imageInput.files[0];
+
+
+    if(!file){
+
+      return;
+
+    }
+
+
+    /* 対応形式チェック */
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp"
+    ];
+
+
+    if(
+      !allowedTypes.includes(
+        file.type
+      )
+    ){
+
+      alert(
+        "JPEG、PNG、GIF、WebPの画像を選択してください。"
+      );
+
+      imageInput.value = "";
+
+      return;
+
+    }
+
+
+    /* FileReaderでBase64化 */
+
+    const reader =
+      new FileReader();
+
+
+    reader.onload = () => {
+
+      selectedImage =
+        reader.result;
+
+
+      imagePreview.src =
+        selectedImage;
+
+
+      imagePreviewArea.style.display =
+        "block";
+
+    };
+
+
+    reader.onerror = () => {
+
+      alert(
+        "画像の読み込みに失敗しました。"
+      );
+
+    };
+
+
+    reader.readAsDataURL(file);
+
+  }
+);
+
+
+/* =========================
+   画像削除
+========================= */
+
+function removeSelectedImage(){
+
+  selectedImage =
+    null;
+
+
+  imageInput.value =
+    "";
+
+
+  imagePreview.src =
+    "";
+
+
+  imagePreviewArea.style.display =
+    "none";
+
+}
+
+
+removeImageBtn.addEventListener(
+  "click",
+  removeSelectedImage
+);
+
+
+/* =========================
    送信
 ========================= */
 
@@ -753,40 +1152,76 @@ async function send(){
     input.value.trim();
 
 
-  if(!text){
+  /*
+   * テキストも画像もない場合
+   */
+
+  if(
+    !text &&
+    !selectedImage
+  ){
 
     return;
 
   }
 
 
-  /* ユーザー */
+  /* =====================
+     ユーザー表示
+  ===================== */
 
-  addMessage(
-    text,
-    "user"
-  );
+  if(text){
+
+    addMessage(
+      text,
+      "user"
+    );
+
+  }else{
+
+    addMessage(
+      "📷 画像を送信",
+      "user"
+    );
+
+  }
 
 
   input.value = "";
 
 
-  /* 履歴 */
+  /* =====================
+     履歴
+  ===================== */
 
-  history.push({
+  /*
+   * 現時点ではhistoryには
+   * テキストだけを保存する。
+   *
+   * 画像そのものは今回のAPI送信時だけ
+   * 使用する。
+   */
 
-    role:"user",
+  if(text){
 
-    content:text
+    history.push({
 
-  });
+      role:"user",
+
+      content:text
+
+    });
+
+  }
 
 
   history =
     history.slice(-10);
 
 
-  /* ローディング */
+  /* =====================
+     ローディング
+  ===================== */
 
   const loading =
     document.createElement(
@@ -805,6 +1240,22 @@ async function send(){
   chat.appendChild(
     loading
   );
+
+
+  /*
+   * 今回送信する画像を保持
+   *
+   * API通信中に画像選択を変更しても
+   * 今回の送信内容が変わらないようにする
+   */
+
+  const imageToSend =
+    selectedImage;
+
+
+  /* 送信後は画像を解除 */
+
+  removeSelectedImage();
 
 
   try{
@@ -837,7 +1288,10 @@ async function send(){
                 characterSelect.value,
 
               prompt:
-                prompt.value
+                prompt.value,
+
+              image:
+                imageToSend
 
             })
 
@@ -854,7 +1308,9 @@ async function send(){
     loading.remove();
 
 
-    /* JSON解析 */
+    /* =====================
+       JSON解析
+    ===================== */
 
     let data;
 
@@ -886,7 +1342,9 @@ async function send(){
     }
 
 
-    /* HTTPエラー */
+    /* =====================
+       HTTPエラー
+    ===================== */
 
     if(!response.ok){
 
@@ -908,7 +1366,9 @@ async function send(){
     }
 
 
-    /* reply確認 */
+    /* =====================
+       reply確認
+    ===================== */
 
     if(
       typeof data.reply !==
@@ -934,7 +1394,9 @@ async function send(){
     }
 
 
-    /* 正常 */
+    /* =====================
+       正常
+    ===================== */
 
     addMessage(
       data.reply,
@@ -949,6 +1411,10 @@ async function send(){
       content:data.reply
 
     });
+
+
+    history =
+      history.slice(-10);
 
 
   }catch(err){
