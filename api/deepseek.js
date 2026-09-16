@@ -99,6 +99,21 @@ module.exports = function handler(req, res) {
       : "";
 
 
+  /*
+   * 今回送信する画像
+   *
+   * Base64 Data URL
+   *
+   * 例：
+   * data:image/jpeg;base64,/9j/4AAQ...
+   */
+
+  const image =
+    typeof body.image === "string"
+      ? body.image.trim()
+      : "";
+
+
   /* =========================
      System Prompt
   ========================= */
@@ -160,8 +175,7 @@ module.exports = function handler(req, res) {
 
 
   /*
-   * 基本プロンプトを
-   * system messageとして使用
+   * 基本プロンプト
    */
 
   if(systemPrompt){
@@ -179,14 +193,18 @@ module.exports = function handler(req, res) {
 
   /*
    * 会話履歴
+   *
+   * 画像は今回のリクエストだけに
+   * 付ける。
    */
 
-  for(const message of history){
+  for(let i = 0; i < history.length; i++){
 
-    if(
-      !message ||
-      typeof message.content !== "string"
-    ){
+    const message =
+      history[i];
+
+
+    if(!message){
 
       continue;
 
@@ -203,11 +221,116 @@ module.exports = function handler(req, res) {
     }
 
 
+    if(
+      typeof message.content !== "string"
+    ){
+
+      continue;
+
+    }
+
+
+    /*
+     * 最後のユーザーメッセージ
+     * ＋画像
+     */
+
+    const isLastUserMessage =
+      message.role === "user" &&
+      i === history.length - 1;
+
+
+    if(
+      isLastUserMessage &&
+      image
+    ){
+
+      messages.push({
+
+        role:"user",
+
+        content:[
+
+          {
+            type:"text",
+
+            text:
+              message.content ||
+              "この画像を見てください。"
+          },
+
+          {
+            type:"image_url",
+
+            image_url:{
+              url:image
+            }
+
+          }
+
+        ]
+
+      });
+
+
+    }else{
+
+      /*
+       * 通常のテキストメッセージ
+       */
+
+      messages.push({
+
+        role:message.role,
+
+        content:message.content
+
+      });
+
+    }
+
+  }
+
+
+  /*
+   * 画像だけ送信された場合
+   *
+   * HTML側では画像だけでもsendできるので、
+   * historyにユーザーメッセージが存在しない
+   * ケースを処理する。
+   */
+
+  if(
+    image &&
+    (
+      history.length === 0 ||
+      history[history.length - 1]?.role !== "user"
+    )
+  ){
+
     messages.push({
 
-      role:message.role,
+      role:"user",
 
-      content:message.content
+      content:[
+
+        {
+          type:"text",
+
+          text:
+            "この画像を見てください。"
+        },
+
+        {
+          type:"image_url",
+
+          image_url:{
+            url:image
+          }
+
+        }
+
+      ]
 
     });
 
@@ -221,7 +344,11 @@ module.exports = function handler(req, res) {
   const requestBody =
     JSON.stringify({
 
-      model:"deepseek-v4-pro",
+      /*
+       * 画像認識対応モデル
+       */
+
+      model:"deepseek-flash",
 
       messages:messages,
 
@@ -266,6 +393,25 @@ module.exports = function handler(req, res) {
     "DeepSeek request start"
   );
 
+
+  /*
+   * デバッグ用
+   */
+
+  console.log(
+    "Character:",
+    character
+  );
+
+  console.log(
+    "Image attached:",
+    Boolean(image)
+  );
+
+
+  /* =========================
+     Request
+  ========================= */
 
   const request =
     https.request(
