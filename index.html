@@ -14,11 +14,12 @@
 <style>
 
 :root{
-  --panel: rgba(255,255,255,0.94);
-  --accent: #1976d2;
-  --accent-light: #eaf3ff;
-  --border: #d5e2f0;
-  --text: #17212b;
+  --panel:rgba(255,255,255,0.96);
+  --accent:#1976d2;
+  --accent-light:#eaf3ff;
+  --border:#d5e2f0;
+  --text:#17212b;
+  --chat-width:900px;
 }
 
 *{
@@ -33,39 +34,11 @@ body{
   overflow:hidden;
   background:#ffffff;
   color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-}
-
-
-/* =========================
-   上下の帯
-========================= */
-
-body::before,
-body::after{
-
-  content:"";
-
-  position:fixed;
-
-  left:0;
-
-  width:100%;
-
-  height:60px;
-
-  background:#ffffff;
-
-  z-index:10;
-
-}
-
-body::before{
-  top:0;
-}
-
-body::after{
-  bottom:0;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Helvetica Neue",
+    sans-serif;
 }
 
 
@@ -120,7 +93,39 @@ body::after{
 
 
 /* =========================
-   UI
+   上下の白帯
+========================= */
+
+body::before,
+body::after{
+
+  content:"";
+
+  position:fixed;
+
+  left:0;
+
+  width:100%;
+
+  height:60px;
+
+  background:#ffffff;
+
+  z-index:10;
+
+}
+
+body::before{
+  top:0;
+}
+
+body::after{
+  bottom:0;
+}
+
+
+/* =========================
+   メインパネル
 ========================= */
 
 .left-panel{
@@ -133,7 +138,7 @@ body::after{
 
   left:0;
 
-  width:45%;
+  width:55%;
 
   display:flex;
 
@@ -150,7 +155,7 @@ body::after{
 
 .top-bar{
 
-  padding:10px;
+  padding:10px 18px;
 
   background:var(--panel);
 
@@ -165,7 +170,7 @@ body::after{
 
 .prompt-area{
 
-  padding:10px;
+  padding:12px 18px;
 
   background:#ffffff;
 
@@ -180,7 +185,7 @@ body::after{
 
   font-weight:bold;
 
-  color:#1976d2;
+  color:var(--accent);
 
   margin-bottom:6px;
 
@@ -256,14 +261,16 @@ select{
 
   overflow-y:auto;
 
-  padding:16px;
+  padding:
+    24px
+    max(24px, calc((100% - var(--chat-width)) / 2));
 
   background:
     linear-gradient(
       to right,
-      rgba(255,255,255,0.96),
-      rgba(255,255,255,0.78),
-      rgba(255,255,255,0)
+      rgba(255,255,255,0.97),
+      rgba(255,255,255,0.88),
+      rgba(255,255,255,0.45)
     );
 
 }
@@ -277,9 +284,9 @@ select{
 
   max-width:90%;
 
-  margin-bottom:14px;
+  margin-bottom:16px;
 
-  padding:12px 16px;
+  padding:13px 17px;
 
   border-radius:16px;
 
@@ -288,6 +295,8 @@ select{
   white-space:pre-wrap;
 
   word-break:break-word;
+
+  font-size:15px;
 
 }
 
@@ -305,7 +314,7 @@ select{
 
 .ai{
 
-  background:rgba(255,255,255,0.9);
+  background:rgba(255,255,255,0.94);
 
   border:1px solid var(--border);
 
@@ -322,7 +331,7 @@ select{
 
   display:none;
 
-  padding:8px 10px;
+  padding:8px 18px;
 
   background:#ffffff;
 
@@ -391,7 +400,7 @@ select{
 
 
 /* =========================
-   入力
+   入力エリア
 ========================= */
 
 .input-area{
@@ -400,7 +409,7 @@ select{
 
   gap:10px;
 
-  padding:10px;
+  padding:10px 18px;
 
   background:#ffffff;
 
@@ -408,6 +417,10 @@ select{
 
 }
 
+
+/* =========================
+   テキスト入力
+========================= */
 
 textarea#input{
 
@@ -426,6 +439,8 @@ textarea#input{
   padding:10px;
 
   font-size:16px;
+
+  line-height:1.5;
 
   color:var(--text);
 
@@ -473,8 +488,6 @@ textarea#input:focus{
 }
 
 
-/* 実際のファイル入力は非表示 */
-
 #imageInput{
 
   display:none;
@@ -514,9 +527,239 @@ textarea#input:focus{
 }
 
 
-/* =========================
+/* =========================================================
+   PC / MacBook
+========================================================= */
+
+@media (min-width:769px){
+
+  /*
+   * PCではチャット領域を少し広くする
+   */
+
+  .left-panel{
+
+    width:70%;
+
+    top:0;
+
+    bottom:0;
+
+    background:
+      rgba(255,255,255,0.08);
+
+  }
+
+
+  /*
+   * 上下の白帯をPCでは消す
+   *
+   * 画面を丸ごとチャットアプリとして使う
+   */
+
+  body::before,
+  body::after{
+
+    display:none;
+
+  }
+
+
+  /*
+   * キャラクターは右30%程度
+   */
+
+  .character{
+
+    max-width:45%;
+
+    height:95%;
+
+  }
+
+
+  /*
+   * 上部
+   */
+
+  .top-bar{
+
+    padding:
+      14px
+      24px;
+
+  }
+
+
+  /*
+   * プロンプト
+   */
+
+  .prompt-area{
+
+    padding:
+      14px
+      24px;
+
+  }
+
+
+  #prompt{
+
+    height:150px;
+
+  }
+
+
+  /*
+   * チャット
+   */
+
+  .chat{
+
+    padding-top:28px;
+
+    padding-bottom:28px;
+
+    padding-left:
+      max(
+        30px,
+        calc((100% - var(--chat-width)) / 2)
+      );
+
+    padding-right:
+      max(
+        30px,
+        calc((100% - var(--chat-width)) / 2)
+      );
+
+  }
+
+
+  /*
+   * メッセージ
+   */
+
+  .message{
+
+    max-width:78%;
+
+    font-size:16px;
+
+    margin-bottom:18px;
+
+    padding:
+      14px
+      18px;
+
+  }
+
+
+  /*
+   * 入力
+   */
+
+  .input-area{
+
+    padding:
+      14px
+      24px;
+
+  }
+
+
+  textarea#input{
+
+    height:64px;
+
+  }
+
+
+  /*
+   * 画像プレビュー
+   */
+
+  .image-preview-area{
+
+    padding:
+      10px
+      24px;
+
+  }
+
+}
+
+
+/* =========================================================
+   大きめのMac / PC
+========================================================= */
+
+@media (min-width:1200px){
+
+  .left-panel{
+
+    width:72%;
+
+  }
+
+
+  .character{
+
+    max-width:42%;
+
+  }
+
+
+  .message{
+
+    max-width:75%;
+
+  }
+
+}
+
+
+/* =========================================================
+   小さいPC / MacBook
+========================================================= */
+
+@media (min-width:769px) and (max-width:1100px){
+
+  .left-panel{
+
+    width:68%;
+
+  }
+
+
+  .character{
+
+    max-width:48%;
+
+    opacity:0.8;
+
+  }
+
+
+  .message{
+
+    max-width:82%;
+
+  }
+
+
+  #prompt{
+
+    height:125px;
+
+  }
+
+}
+
+
+/* =========================================================
    スマホ
-========================= */
+========================================================= */
 
 @media (max-width:768px){
 
@@ -543,12 +786,21 @@ textarea#input:focus{
 
     left:50%;
 
+    right:auto;
+
     transform:
       translateX(-50%);
 
     max-width:100%;
 
     opacity:0.18;
+
+  }
+
+
+  .top-bar{
+
+    padding:8px;
 
   }
 
@@ -567,9 +819,33 @@ textarea#input:focus{
   }
 
 
+  .chat{
+
+    padding:16px;
+
+    background:
+      linear-gradient(
+        to right,
+        rgba(255,255,255,0.96),
+        rgba(255,255,255,0.78),
+        rgba(255,255,255,0)
+      );
+
+  }
+
+
   .message{
 
     max-width:96%;
+
+    font-size:15px;
+
+  }
+
+
+  .image-preview-area{
+
+    padding:8px;
 
   }
 
@@ -579,6 +855,13 @@ textarea#input:focus{
     max-width:140px;
 
     max-height:100px;
+
+  }
+
+
+  .input-area{
+
+    padding:10px;
 
   }
 
@@ -734,8 +1017,6 @@ textarea#input:focus{
   <div class="input-area">
 
 
-    <!-- 画像選択 -->
-
     <button
       id="imageBtn"
       type="button"
@@ -752,14 +1033,10 @@ textarea#input:focus{
       accept="image/jpeg,image/png,image/gif,image/webp">
 
 
-    <!-- テキスト入力 -->
-
     <textarea
       id="input"
       placeholder="メッセージ入力"></textarea>
 
-
-    <!-- 送信 -->
 
     <button
       id="sendBtn"
@@ -863,7 +1140,7 @@ let history = [];
 
 
 /* =========================
-   現在選択されている画像
+   選択画像
 ========================= */
 
 let selectedImage = null;
@@ -908,10 +1185,6 @@ async function applyCharacter(){
   bg.style.backgroundImage =
     `url('${char}.jpg')`;
 
-
-  /* =====================
-     基本プロンプト読み込み
-  ===================== */
 
   try{
 
@@ -1048,13 +1321,16 @@ imageInput.addEventListener(
     }
 
 
-    /* 対応形式チェック */
-
     const allowedTypes = [
+
       "image/jpeg",
+
       "image/png",
+
       "image/gif",
+
       "image/webp"
+
     ];
 
 
@@ -1074,8 +1350,6 @@ imageInput.addEventListener(
 
     }
 
-
-    /* FileReaderでBase64化 */
 
     const reader =
       new FileReader();
@@ -1152,10 +1426,6 @@ async function send(){
     input.value.trim();
 
 
-  /*
-   * テキストも画像もない場合
-   */
-
   if(
     !text &&
     !selectedImage
@@ -1193,14 +1463,6 @@ async function send(){
   /* =====================
      履歴
   ===================== */
-
-  /*
-   * 現時点ではhistoryには
-   * テキストだけを保存する。
-   *
-   * 画像そのものは今回のAPI送信時だけ
-   * 使用する。
-   */
 
   if(text){
 
@@ -1242,18 +1504,13 @@ async function send(){
   );
 
 
-  /*
-   * 今回送信する画像を保持
-   *
-   * API通信中に画像選択を変更しても
-   * 今回の送信内容が変わらないようにする
-   */
+  /* =====================
+     今回の画像
+  ===================== */
 
   const imageToSend =
     selectedImage;
 
-
-  /* 送信後は画像を解除 */
 
   removeSelectedImage();
 
@@ -1282,7 +1539,8 @@ async function send(){
           body:
             JSON.stringify({
 
-              history:history,
+              history:
+                history,
 
               character:
                 characterSelect.value,
@@ -1298,8 +1556,6 @@ async function send(){
         }
       );
 
-
-    /* textとして取得 */
 
     const raw =
       await response.text();
