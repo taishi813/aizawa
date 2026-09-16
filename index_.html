@@ -1,238 +1,254 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-<title>Cinematic Gravure AI</title>
+<meta charset="UTF-8">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>AI Chat</title>
+
 
 <style>
 
 :root{
-  --bg:#060606;
-  --panel:rgba(15,15,18,0.72);
-  --panel-strong:rgba(15,15,18,0.92);
-
-  --text:#f5f5f5;
-  --sub:#aaaaaa;
-
-  --accent:#ff4fa3;
-  --accent2:#ff7bc0;
-
-  --blur:18px;
-
-  --shadow:
-    0 10px 40px rgba(0,0,0,.45);
-
-  --radius:22px;
+  --panel: rgba(255,255,255,0.94);
+  --accent: #1976d2;
+  --accent-light: #eaf3ff;
+  --border: #d5e2f0;
+  --text: #17212b;
 }
 
 *{
   box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
 }
 
-html,body{
+html,
+body{
   margin:0;
   width:100%;
   height:100%;
   overflow:hidden;
-
-  background:var(--bg);
+  background:#ffffff;
   color:var(--text);
-
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    "Helvetica Neue",
-    sans-serif;
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
 }
 
-/* 背景 */
 
-.bg{
-  position:fixed;
-  inset:0;
+/* =========================
+   上下の帯
+========================= */
 
-  background:#111;
-  background-size:cover;
-  background-position:center;
+body::before,
+body::after{
 
-  transform:scale(1.05);
-
-  filter:
-    brightness(.38)
-    blur(16px);
-
-  transition:
-    background-image .6s ease,
-    filter .6s ease;
-
-  z-index:0;
-}
-
-.bg::after{
   content:"";
 
-  position:absolute;
-  inset:0;
-
-  background:
-    radial-gradient(
-      circle at top,
-      rgba(255,255,255,.06),
-      transparent 45%
-    ),
-    linear-gradient(
-      to bottom,
-      rgba(0,0,0,.15),
-      rgba(0,0,0,.72)
-    );
-}
-
-/* キャラ */
-
-.character-wrap{
   position:fixed;
+
+  left:0;
+
+  width:100%;
+
+  height:60px;
+
+  background:#ffffff;
+
+  z-index:10;
+
+}
+
+body::before{
+  top:0;
+}
+
+body::after{
+  bottom:0;
+}
+
+
+/* =========================
+   背景
+========================= */
+
+.bg{
+
+  position:fixed;
+
   inset:0;
 
-  pointer-events:none;
-  z-index:1;
+  background:#eef5fb;
+
+  background-size:cover;
+
+  background-position:center;
+
+  filter:
+    brightness(0.8)
+    blur(10px);
+
+  z-index:0;
+
 }
+
+
+/* =========================
+   キャラクター
+========================= */
 
 .character{
 
-  position:absolute;
+  position:fixed;
 
   right:0;
+
   bottom:0;
 
   height:100%;
-  max-width:58%;
+
+  max-width:55%;
 
   object-fit:contain;
 
-  opacity:0;
-  transform:
-    translateX(30px)
-    scale(1.02);
+  z-index:1;
 
-  transition:
-    opacity .5s ease,
-    transform .7s ease;
+  pointer-events:none;
 
-  filter:
-    drop-shadow(0 10px 40px rgba(0,0,0,.55));
 }
 
-.character.show{
-  opacity:1;
 
-  transform:
-    translateX(0)
-    scale(1);
-}
-
-/* レイアウト */
-
-.layout{
-  position:relative;
-
-  width:100%;
-  height:100%;
-
-  display:flex;
-
-  z-index:5;
-}
-
-/* 左UI */
+/* =========================
+   UI
+========================= */
 
 .left-panel{
 
-  width:min(520px, 100%);
+  position:fixed;
 
-  height:100%;
+  top:60px;
 
-  padding:20px;
+  bottom:60px;
+
+  left:0;
+
+  width:45%;
 
   display:flex;
+
   flex-direction:column;
-  gap:14px;
+
+  z-index:5;
+
 }
 
-/* ガラス */
 
-.glass{
+/* =========================
+   キャラクター選択
+========================= */
+
+.top-bar{
+
+  padding:10px;
+
   background:var(--panel);
 
-  backdrop-filter:blur(var(--blur));
+  border-bottom:1px solid var(--border);
 
-  border:
-    1px solid rgba(255,255,255,.08);
-
-  box-shadow:var(--shadow);
 }
 
-/* 上部 */
 
-.topbar{
+/* =========================
+   基本プロンプト
+========================= */
 
-  border-radius:var(--radius);
+.prompt-area{
 
-  padding:14px;
+  padding:10px;
+
+  background:#ffffff;
+
+  border-bottom:1px solid var(--border);
+
 }
 
-.title{
-  font-size:20px;
-  font-weight:700;
-  letter-spacing:.04em;
 
-  margin-bottom:10px;
-}
+.prompt-label{
 
-.subtitle{
-  color:var(--sub);
   font-size:13px;
 
-  margin-bottom:12px;
+  font-weight:bold;
+
+  color:#1976d2;
+
+  margin-bottom:6px;
+
 }
+
+
+#prompt{
+
+  width:100%;
+
+  height:120px;
+
+  resize:vertical;
+
+  border:1px solid var(--border);
+
+  border-radius:10px;
+
+  padding:10px;
+
+  outline:none;
+
+  font-size:14px;
+
+  line-height:1.6;
+
+  color:var(--text);
+
+  background:#f8fbff;
+
+}
+
+
+#prompt:focus{
+
+  border-color:var(--accent);
+
+  background:#ffffff;
+
+}
+
+
+/* =========================
+   select
+========================= */
 
 select{
 
   width:100%;
 
-  border:none;
-  outline:none;
+  padding:10px;
 
-  background:
-    rgba(255,255,255,.08);
+  border:1px solid var(--border);
 
-  color:white;
+  border-radius:10px;
 
-  border-radius:14px;
+  font-size:16px;
 
-  padding:14px;
+  background:#ffffff;
 
-  font-size:15px;
+  color:var(--text);
+
 }
 
-/* chat */
 
-.chat-wrap{
-  flex:1;
-
-  min-height:0;
-
-  border-radius:28px;
-
-  overflow:hidden;
-
-  display:flex;
-  flex-direction:column;
-}
+/* =========================
+   チャット
+========================= */
 
 .chat{
 
@@ -240,311 +256,1235 @@ select{
 
   overflow-y:auto;
 
-  padding:
-    18px
-    18px
-    100px;
+  padding:16px;
 
-  scroll-behavior:smooth;
+  background:
+    linear-gradient(
+      to right,
+      rgba(255,255,255,0.96),
+      rgba(255,255,255,0.78),
+      rgba(255,255,255,0)
+    );
+
 }
 
-.chat::-webkit-scrollbar{
-  width:8px;
-}
 
-.chat::-webkit-scrollbar-thumb{
-  background:rgba(255,255,255,.14);
-  border-radius:999px;
-}
-
-/* message */
-
-.message-row{
-  display:flex;
-
-  margin-bottom:16px;
-}
-
-.message-row.user{
-  justify-content:flex-end;
-}
+/* =========================
+   メッセージ
+========================= */
 
 .message{
 
-  max-width:88%;
+  max-width:90%;
 
-  padding:14px 16px;
+  margin-bottom:14px;
 
-  border-radius:20px;
+  padding:12px 16px;
 
-  line-height:1.9;
+  border-radius:16px;
+
+  line-height:1.8;
 
   white-space:pre-wrap;
+
   word-break:break-word;
 
-  font-size:15px;
 }
 
-.message.user{
-  background:
-    linear-gradient(
-      135deg,
-      var(--accent),
-      var(--accent2)
-    );
 
-  box-shadow:
-    0 6px 20px rgba(255,79,163,.25);
+.user{
+
+  background:var(--accent);
+
+  color:white;
+
+  margin-left:auto;
+
 }
 
-.message.ai{
-  background:
-    rgba(255,255,255,.08);
 
-  border:
-    1px solid rgba(255,255,255,.06);
+.ai{
+
+  background:rgba(255,255,255,0.9);
+
+  border:1px solid var(--border);
+
+  backdrop-filter:blur(6px);
+
 }
 
-/* loading */
 
-.typing{
-  display:flex;
-  gap:6px;
-  align-items:center;
+/* =========================
+   画像プレビュー
+========================= */
+
+.image-preview-area{
+
+  display:none;
+
+  padding:8px 10px;
+
+  background:#ffffff;
+
+  border-top:1px solid var(--border);
+
 }
 
-.dot{
-  width:8px;
-  height:8px;
+
+.image-preview-container{
+
+  position:relative;
+
+  display:inline-block;
+
+}
+
+
+#imagePreview{
+
+  display:block;
+
+  max-width:180px;
+
+  max-height:120px;
+
+  border-radius:10px;
+
+  border:1px solid var(--border);
+
+  object-fit:contain;
+
+}
+
+
+#removeImageBtn{
+
+  position:absolute;
+
+  top:-7px;
+
+  right:-7px;
+
+  width:24px;
+
+  height:24px;
+
+  padding:0;
+
+  border:none;
 
   border-radius:50%;
 
-  background:white;
+  background:#ffffff;
 
-  opacity:.3;
+  color:#555;
 
-  animation:blink 1s infinite;
-}
+  border:1px solid var(--border);
 
-.dot:nth-child(2){
-  animation-delay:.15s;
-}
+  font-size:16px;
 
-.dot:nth-child(3){
-  animation-delay:.3s;
-}
-
-@keyframes blink{
-
-  0%,100%{
-    opacity:.25;
-    transform:translateY(0);
-  }
-
-  50%{
-    opacity:1;
-    transform:translateY(-3px);
-  }
-}
-
-/* 入力 */
-
-.inputbar{
-
-  padding:14px;
-
-  border-top:
-    1px solid rgba(255,255,255,.06);
-
-  display:flex;
-  gap:10px;
-}
-
-textarea{
-
-  flex:1;
-
-  height:58px;
-  max-height:140px;
-
-  resize:none;
-
-  border:none;
-  outline:none;
-
-  border-radius:16px;
-
-  background:
-    rgba(255,255,255,.08);
-
-  color:white;
-
-  padding:16px;
-
-  font-size:15px;
-  line-height:1.5;
-}
-
-button{
-
-  width:88px;
-
-  border:none;
-  border-radius:16px;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--accent),
-      var(--accent2)
-    );
-
-  color:white;
-
-  font-size:15px;
-  font-weight:700;
+  line-height:22px;
 
   cursor:pointer;
 
-  transition:
-    transform .15s ease,
-    opacity .15s ease;
 }
 
-button:hover{
-  transform:translateY(-1px);
+
+/* =========================
+   入力
+========================= */
+
+.input-area{
+
+  display:flex;
+
+  gap:10px;
+
+  padding:10px;
+
+  background:#ffffff;
+
+  border-top:1px solid var(--border);
+
 }
 
-button:active{
-  transform:scale(.98);
+
+textarea#input{
+
+  flex:1;
+
+  height:60px;
+
+  resize:none;
+
+  border:1px solid var(--border);
+
+  outline:none;
+
+  border-radius:10px;
+
+  padding:10px;
+
+  font-size:16px;
+
+  color:var(--text);
+
+  background:#ffffff;
+
 }
 
-button:disabled{
-  opacity:.5;
-  cursor:not-allowed;
+
+textarea#input:focus{
+
+  border-color:var(--accent);
+
 }
 
-/* mobile */
 
-@media(max-width:768px){
+/* =========================
+   画像ボタン
+========================= */
+
+#imageBtn{
+
+  width:52px;
+
+  flex-shrink:0;
+
+  border:1px solid var(--border);
+
+  border-radius:10px;
+
+  background:#f8fbff;
+
+  color:var(--accent);
+
+  font-size:24px;
+
+  cursor:pointer;
+
+}
+
+
+#imageBtn:hover{
+
+  background:var(--accent-light);
+
+}
+
+
+/* 実際のファイル入力は非表示 */
+
+#imageInput{
+
+  display:none;
+
+}
+
+
+/* =========================
+   送信ボタン
+========================= */
+
+#sendBtn{
+
+  width:80px;
+
+  flex-shrink:0;
+
+  border:none;
+
+  border-radius:10px;
+
+  background:var(--accent);
+
+  color:white;
+
+  font-size:16px;
+
+  cursor:pointer;
+
+}
+
+
+#sendBtn:hover{
+
+  opacity:0.9;
+
+}
+
+
+/* =========================
+   スマホ
+========================= */
+
+@media (max-width:768px){
+
+  body::before,
+  body::after{
+
+    height:40px;
+
+  }
+
 
   .left-panel{
+
     width:100%;
-    padding:12px;
+
+    top:40px;
+
+    bottom:40px;
+
   }
+
 
   .character{
 
     left:50%;
-    right:auto;
 
     transform:
-      translateX(-50%)
-      scale(1.05);
+      translateX(-50%);
 
     max-width:100%;
 
-    opacity:.18;
+    opacity:0.18;
+
   }
 
-  .character.show{
 
-    transform:
-      translateX(-50%)
-      scale(1);
+  .prompt-area{
+
+    padding:8px;
+
   }
+
+
+  #prompt{
+
+    height:100px;
+
+  }
+
 
   .message{
-    max-width:94%;
+
+    max-width:96%;
+
   }
 
-  .title{
-    font-size:18px;
+
+  #imagePreview{
+
+    max-width:140px;
+
+    max-height:100px;
+
   }
 
-  textarea{
-    font-size:16px;
+
+  #imageBtn{
+
+    width:48px;
+
   }
+
+
+  #sendBtn{
+
+    width:70px;
+
+  }
+
 }
 
 </style>
+
 </head>
+
 
 <body>
 
-<div id="bg" class="bg"></div>
 
-<div class="character-wrap">
-  <img
-    id="characterImg"
-    class="character"
-  />
+<!-- =========================
+     背景
+========================= -->
+
+<div id="bg"
+     class="bg">
 </div>
 
-<div class="layout">
 
-  <div class="left-panel">
+<!-- =========================
+     キャラクター
+========================= -->
 
-    <div class="topbar glass">
+<img id="characterImg"
+     class="character"
+     style="display:none;">
 
-      <div class="title">
-        CINEMATIC AI CHAT
-      </div>
 
-      <div class="subtitle">
-        DeepSeek Pro Gravure Dialogue System
-      </div>
+<div class="left-panel">
 
-      <select id="characterSelect">
 
-        <option value="normal">
-          ノーマル
-        </option>
+  <!-- =====================
+       キャラクター選択
+  ====================== -->
 
-        <option value="manager">
-          マネージャー
-        </option>
+  <div class="top-bar">
 
-        <option value="aizawa">
-          相澤仁美
-        </option>
+    <select id="characterSelect">
 
-        <option value="ogura">
-          小倉優香
-        </option>
+      <option value="manager">
+        ブランク
+      </option>
 
-        <option value="enako">
-          えなこ
-        </option>
+      <option value="aizawa">
+        相澤仁美
+      </option>
 
-      </select>
+      <option value="ogura">
+        小倉優香
+      </option>
 
+      <option value="harumi">
+        根本はるみ
+      </option>
+
+      <option value="wacchi">
+        わちみなみ
+      </option>
+
+      <option value="yanase">
+        柳瀬早紀
+      </option>
+
+      <option value="ramu">
+        RaMu
+      </option>
+
+      <option value="rika">
+        泉里香
+      </option>
+
+      <option value="io">
+        伊織いお
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <!-- =====================
+       基本プロンプト
+  ====================== -->
+
+  <div class="prompt-area">
+
+    <div class="prompt-label">
+      基本プロンプト
     </div>
 
-    <div class="chat-wrap glass">
+    <textarea
+      id="prompt"
+      placeholder="このキャラクターの基本設定を入力"></textarea>
 
-      <div id="chat" class="chat"></div>
+  </div>
 
-      <div class="inputbar">
 
-        <textarea
-          id="input"
-          placeholder="メッセージを入力..."
-        ></textarea>
+  <!-- =====================
+       チャット
+  ====================== -->
 
-        <button id="sendBtn">
-          送信
-        </button>
+  <div id="chat"
+       class="chat">
+  </div>
 
-      </div>
+
+  <!-- =====================
+       画像プレビュー
+  ====================== -->
+
+  <div
+    id="imagePreviewArea"
+    class="image-preview-area">
+
+    <div class="image-preview-container">
+
+      <img
+        id="imagePreview"
+        alt="画像プレビュー">
+
+      <button
+        id="removeImageBtn"
+        type="button">
+        ×
+      </button>
 
     </div>
 
   </div>
 
+
+  <!-- =====================
+       入力
+  ====================== -->
+
+  <div class="input-area">
+
+
+    <!-- 画像選択 -->
+
+    <button
+      id="imageBtn"
+      type="button"
+      title="画像を選択">
+
+      📷
+
+    </button>
+
+
+    <input
+      id="imageInput"
+      type="file"
+      accept="image/jpeg,image/png,image/gif,image/webp">
+
+
+    <!-- テキスト入力 -->
+
+    <textarea
+      id="input"
+      placeholder="メッセージ入力"></textarea>
+
+
+    <!-- 送信 -->
+
+    <button
+      id="sendBtn"
+      type="button">
+
+      送信
+
+    </button>
+
+
+  </div>
+
+
 </div>
 
-<script src="script.js"></script>
+
+<script>
+
+
+/* =========================
+   DOM
+========================= */
+
+const chat =
+  document.getElementById(
+    "chat"
+  );
+
+
+const input =
+  document.getElementById(
+    "input"
+  );
+
+
+const prompt =
+  document.getElementById(
+    "prompt"
+  );
+
+
+const sendBtn =
+  document.getElementById(
+    "sendBtn"
+  );
+
+
+const characterSelect =
+  document.getElementById(
+    "characterSelect"
+  );
+
+
+const characterImg =
+  document.getElementById(
+    "characterImg"
+  );
+
+
+const bg =
+  document.getElementById(
+    "bg"
+  );
+
+
+const imageBtn =
+  document.getElementById(
+    "imageBtn"
+  );
+
+
+const imageInput =
+  document.getElementById(
+    "imageInput"
+  );
+
+
+const imagePreviewArea =
+  document.getElementById(
+    "imagePreviewArea"
+  );
+
+
+const imagePreview =
+  document.getElementById(
+    "imagePreview"
+  );
+
+
+const removeImageBtn =
+  document.getElementById(
+    "removeImageBtn"
+  );
+
+
+/* =========================
+   履歴
+========================= */
+
+let history = [];
+
+
+/* =========================
+   現在選択されている画像
+========================= */
+
+let selectedImage = null;
+
+
+/* =========================
+   キャラクター
+========================= */
+
+async function applyCharacter(){
+
+  const char =
+    characterSelect.value;
+
+
+  if(char === "normal"){
+
+    characterImg.style.display =
+      "none";
+
+    bg.style.backgroundImage =
+      "none";
+
+    bg.style.background =
+      "#eef5fb";
+
+    prompt.value = "";
+
+    return;
+
+  }
+
+
+  characterImg.style.display =
+    "block";
+
+
+  characterImg.src =
+    `${char}.png`;
+
+
+  bg.style.backgroundImage =
+    `url('${char}.jpg')`;
+
+
+  /* =====================
+     基本プロンプト読み込み
+  ===================== */
+
+  try{
+
+    const response =
+      await fetch(
+        `${char}.txt`
+      );
+
+
+    if(response.ok){
+
+      prompt.value =
+        await response.text();
+
+    }else{
+
+      prompt.value =
+        "";
+
+    }
+
+  }catch(err){
+
+    console.error(
+      "PROMPT LOAD ERROR:",
+      err
+    );
+
+    prompt.value =
+      "";
+
+  }
+
+}
+
+
+/* =========================
+   キャラクター変更
+========================= */
+
+characterSelect.addEventListener(
+  "change",
+  () => {
+
+    history = [];
+
+    chat.innerHTML = "";
+
+    removeSelectedImage();
+
+    applyCharacter();
+
+  }
+);
+
+
+/* =========================
+   初期化
+========================= */
+
+applyCharacter();
+
+
+/* =========================
+   メッセージ表示
+========================= */
+
+function addMessage(
+  text,
+  type
+){
+
+  const div =
+    document.createElement(
+      "div"
+    );
+
+
+  div.className =
+    "message " + type;
+
+
+  div.textContent =
+    text;
+
+
+  chat.appendChild(
+    div
+  );
+
+
+  requestAnimationFrame(
+    () => {
+
+      chat.scrollTop =
+        chat.scrollHeight;
+
+    }
+  );
+
+}
+
+
+/* =========================
+   画像選択
+========================= */
+
+imageBtn.addEventListener(
+  "click",
+  () => {
+
+    imageInput.click();
+
+  }
+);
+
+
+/* =========================
+   画像読み込み
+========================= */
+
+imageInput.addEventListener(
+  "change",
+  () => {
+
+    const file =
+      imageInput.files[0];
+
+
+    if(!file){
+
+      return;
+
+    }
+
+
+    /* 対応形式チェック */
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp"
+    ];
+
+
+    if(
+      !allowedTypes.includes(
+        file.type
+      )
+    ){
+
+      alert(
+        "JPEG、PNG、GIF、WebPの画像を選択してください。"
+      );
+
+      imageInput.value = "";
+
+      return;
+
+    }
+
+
+    /* FileReaderでBase64化 */
+
+    const reader =
+      new FileReader();
+
+
+    reader.onload = () => {
+
+      selectedImage =
+        reader.result;
+
+
+      imagePreview.src =
+        selectedImage;
+
+
+      imagePreviewArea.style.display =
+        "block";
+
+    };
+
+
+    reader.onerror = () => {
+
+      alert(
+        "画像の読み込みに失敗しました。"
+      );
+
+    };
+
+
+    reader.readAsDataURL(file);
+
+  }
+);
+
+
+/* =========================
+   画像削除
+========================= */
+
+function removeSelectedImage(){
+
+  selectedImage =
+    null;
+
+
+  imageInput.value =
+    "";
+
+
+  imagePreview.src =
+    "";
+
+
+  imagePreviewArea.style.display =
+    "none";
+
+}
+
+
+removeImageBtn.addEventListener(
+  "click",
+  removeSelectedImage
+);
+
+
+/* =========================
+   送信
+========================= */
+
+async function send(){
+
+  const text =
+    input.value.trim();
+
+
+  /*
+   * テキストも画像もない場合
+   */
+
+  if(
+    !text &&
+    !selectedImage
+  ){
+
+    return;
+
+  }
+
+
+  /* =====================
+     ユーザー表示
+  ===================== */
+
+  if(text){
+
+    addMessage(
+      text,
+      "user"
+    );
+
+  }else{
+
+    addMessage(
+      "📷 画像を送信",
+      "user"
+    );
+
+  }
+
+
+  input.value = "";
+
+
+  /* =====================
+     履歴
+  ===================== */
+
+  /*
+   * 現時点ではhistoryには
+   * テキストだけを保存する。
+   *
+   * 画像そのものは今回のAPI送信時だけ
+   * 使用する。
+   */
+
+  if(text){
+
+    history.push({
+
+      role:"user",
+
+      content:text
+
+    });
+
+  }
+
+
+  history =
+    history.slice(-10);
+
+
+  /* =====================
+     ローディング
+  ===================== */
+
+  const loading =
+    document.createElement(
+      "div"
+    );
+
+
+  loading.className =
+    "message ai";
+
+
+  loading.textContent =
+    "考え中…";
+
+
+  chat.appendChild(
+    loading
+  );
+
+
+  /*
+   * 今回送信する画像を保持
+   *
+   * API通信中に画像選択を変更しても
+   * 今回の送信内容が変わらないようにする
+   */
+
+  const imageToSend =
+    selectedImage;
+
+
+  /* 送信後は画像を解除 */
+
+  removeSelectedImage();
+
+
+  try{
+
+    /* =====================
+       API
+    ===================== */
+
+    const response =
+      await fetch(
+        window.location.origin +
+        "/api/deepseek",
+        {
+
+          method:"POST",
+
+          headers:{
+
+            "Content-Type":
+              "application/json"
+
+          },
+
+          body:
+            JSON.stringify({
+
+              history:history,
+
+              character:
+                characterSelect.value,
+
+              prompt:
+                prompt.value,
+
+              image:
+                imageToSend
+
+            })
+
+        }
+      );
+
+
+    /* textとして取得 */
+
+    const raw =
+      await response.text();
+
+
+    loading.remove();
+
+
+    /* =====================
+       JSON解析
+    ===================== */
+
+    let data;
+
+
+    try{
+
+      data =
+        JSON.parse(raw);
+
+    }catch(parseError){
+
+      addMessage(
+
+        "APIからJSONではないレスポンスが返りました。\n\n" +
+
+        "HTTP Status: " +
+        response.status +
+
+        "\n\n" +
+
+        raw,
+
+        "ai"
+
+      );
+
+      return;
+
+    }
+
+
+    /* =====================
+       HTTPエラー
+    ===================== */
+
+    if(!response.ok){
+
+      addMessage(
+
+        "APIエラー:\n\n" +
+
+        (
+          data.error ||
+          "unknown error"
+        ),
+
+        "ai"
+
+      );
+
+      return;
+
+    }
+
+
+    /* =====================
+       reply確認
+    ===================== */
+
+    if(
+      typeof data.reply !==
+      "string"
+    ){
+
+      addMessage(
+
+        "APIレスポンスに reply がありません。\n\n" +
+
+        JSON.stringify(
+          data,
+          null,
+          2
+        ),
+
+        "ai"
+
+      );
+
+      return;
+
+    }
+
+
+    /* =====================
+       正常
+    ===================== */
+
+    addMessage(
+      data.reply,
+      "ai"
+    );
+
+
+    history.push({
+
+      role:"assistant",
+
+      content:data.reply
+
+    });
+
+
+    history =
+      history.slice(-10);
+
+
+  }catch(err){
+
+    console.error(
+      "FETCH ERROR:",
+      err
+    );
+
+
+    loading.remove();
+
+
+    addMessage(
+
+      "FETCHエラー\n\n" +
+
+      (
+        err.message ||
+        String(err)
+      ),
+
+      "ai"
+
+    );
+
+  }
+
+}
+
+
+/* =========================
+   Enter
+========================= */
+
+input.addEventListener(
+  "keydown",
+  e => {
+
+    if(
+
+      e.key === "Enter" &&
+
+      !e.shiftKey &&
+
+      !e.isComposing
+
+    ){
+
+      e.preventDefault();
+
+      send();
+
+    }
+
+  }
+);
+
+
+/* =========================
+   ボタン
+========================= */
+
+sendBtn.onclick =
+  send;
+
+
+</script>
+
 
 </body>
+
 </html>
