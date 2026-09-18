@@ -27,59 +27,46 @@ module.exports = function handler(req, res) {
   ========================= */
 
   if(req.method === "OPTIONS"){
-
     res.status(200).end();
-
     return;
-
   }
 
 
   /* =========================
-     POST only
+     POST ONLY
   ========================= */
 
   if(req.method !== "POST"){
-
     res.status(405).json({
       error:"Method not allowed"
     });
-
     return;
-
   }
 
 
   /* =========================
-     API key
+     API KEY
   ========================= */
 
-  const apiKey =
-    process.env.DEEPSEEK_API_KEY;
-
+  const apiKey = process.env.DEEPSEEK_API_KEY;
 
   if(!apiKey){
-
     res.status(500).json({
-      error:
-        "DEEPSEEK_API_KEY が設定されていません"
+      error:"DEEPSEEK_API_KEY が設定されていません"
     });
-
     return;
-
   }
 
 
   /* =========================
-     Request body
+     REQUEST BODY
   ========================= */
 
-  const body =
-    req.body || {};
+  const body = req.body || {};
 
 
   /* =========================
-     現在のチャット履歴
+     CHAT HISTORY
   ========================= */
 
   const history =
@@ -89,7 +76,7 @@ module.exports = function handler(req, res) {
 
 
   /* =========================
-     キャラクター
+     CHARACTER
   ========================= */
 
   const character =
@@ -97,7 +84,7 @@ module.exports = function handler(req, res) {
 
 
   /* =========================
-     基本プロンプト
+     CHARACTER PROMPT
   ========================= */
 
   const clientPrompt =
@@ -107,8 +94,10 @@ module.exports = function handler(req, res) {
 
 
   /* =========================
-     大志との歴史
-     history.json
+     SHARED HISTORICAL MEMORY
+     
+     全キャラクター共通の
+     「大志との歴史」
   ========================= */
 
   const historicalMemory =
@@ -118,7 +107,7 @@ module.exports = function handler(req, res) {
 
 
   /* =========================
-     今回の画像
+     IMAGE
   ========================= */
 
   const image =
@@ -128,26 +117,22 @@ module.exports = function handler(req, res) {
 
 
   /* =========================
-     System Prompt
+     SYSTEM PROMPT
   ========================= */
 
-  let systemPrompt =
-    clientPrompt;
+  let systemPrompt = clientPrompt;
 
 
   /*
-   * promptが空の場合だけ
-   * 従来どおりTXTから読み込む
+   * フロント側からプロンプトが
+   * 渡されなかった場合は、
+   * キャラクター名.txt を読む
    */
 
   if(!systemPrompt){
 
-    const fs =
-      require("fs");
-
-    const path =
-      require("path");
-
+    const fs = require("fs");
+    const path = require("path");
 
     try{
 
@@ -156,7 +141,6 @@ module.exports = function handler(req, res) {
           process.cwd(),
           `${character}.txt`
         );
-
 
       if(fs.existsSync(promptPath)){
 
@@ -181,191 +165,95 @@ module.exports = function handler(req, res) {
 
 
   /* =========================
-     キャラクターに該当する歴史
-  ========================= */
-
-  const characterHistory =
-    historicalMemory.filter(
-      item => {
-
-        if(!item){
-
-          return false;
-
-        }
-
-
-        /*
-         * characterが指定されていない
-         * 共通イベントも残す
-         */
-
-        if(
-          !item.character ||
-          item.character === "all" ||
-          item.character === "共通"
-        ){
-
-          return true;
-
-        }
-
-
-        /*
-         * JSON側のcharacterは
-         * 日本語名でも英字IDでも使えるようにする
-         */
-
-        const characterNames = {
-
-          manager:[
-            "manager",
-            "ブランク"
-          ],
-
-          aizawa:[
-            "aizawa",
-            "相澤仁美"
-          ],
-
-          ogura:[
-            "ogura",
-            "小倉優香"
-          ],
-
-          harumi:[
-            "harumi",
-            "根本はるみ"
-          ],
-
-          wacchi:[
-            "wacchi",
-            "わちみなみ"
-          ],
-
-          yanase:[
-            "yanase",
-            "柳瀬早紀"
-          ],
-
-          ramu:[
-            "ramu",
-            "RaMu"
-          ],
-
-          rika:[
-            "rika",
-            "泉里香"
-          ],
-
-          io:[
-            "io",
-            "伊織いお"
-          ]
-
-        };
-
-
-        const names =
-          characterNames[character] ||
-          [character];
-
-
-        return names.includes(
-          item.character
-        );
-
-      }
-    );
-
-
-  /* =========================
-     Messages
+     MESSAGES
   ========================= */
 
   const messages = [];
 
 
   /* =========================
-     基本プロンプト
+     CHARACTER SYSTEM PROMPT
   ========================= */
 
   if(systemPrompt){
 
     messages.push({
-
       role:"system",
-
       content:systemPrompt
-
     });
 
   }
 
 
   /* =========================
-     大志との歴史
+     SHARED HISTORICAL MEMORY
+     
+     ここではキャラクターによる
+     絞り込みを行わない。
+     
+     仁美との歴史も、
+     小倉優香との歴史も、
+     根本はるみとの歴史も、
+     全キャラクターから参照可能。
   ========================= */
 
-  if(characterHistory.length > 0){
+  if(historicalMemory.length > 0){
 
     let historyText =
-      "【大志との過去の出来事】\n\n";
+      "【大志との共有された過去の歴史】\n\n";
 
 
-    characterHistory.forEach(
-      item => {
+    historicalMemory.forEach(item => {
 
-        historyText +=
-          `日付: ${item.date || ""}\n`;
-
-
-        historyText +=
-          `出来事: ${item.event || ""}\n`;
-
-
-        historyText +=
-          `内容: ${item.summary || ""}\n\n`;
-
+      if(!item || typeof item !== "object"){
+        return;
       }
-    );
+
+
+      historyText +=
+        `日付: ${item.date || ""}\n`;
+
+      historyText +=
+        `相手: ${item.character || ""}\n`;
+
+      historyText +=
+        `出来事: ${item.event || ""}\n`;
+
+      historyText +=
+        `内容: ${item.summary || ""}\n\n`;
+
+    });
 
 
     historyText +=
-      "これは過去の出来事に関する記録です。" +
-      "現在の会話では、この記録をキャラクターの過去の経験として自然に参照してください。" +
-      "記録にない出来事を、記録にある事実として勝手に作らないでください。";
+      "この歴史は、大志とこの世界のキャラクターたちの間で起きた過去の出来事を記録した共有情報です。\n" +
+      "現在会話しているキャラクター自身の出来事だけでなく、他のキャラクターと大志との出来事も知識として参照できます。\n" +
+      "他のキャラクターと大志との出来事についても、必要に応じて自然に言及したり、質問したりできます。\n" +
+      "ただし、他のキャラクターが実際に経験した出来事を、現在会話している自分自身が直接経験したことのようには扱わないでください。\n" +
+      "例えば、相澤仁美と大志との出来事を小倉優香が知っている場合でも、小倉優香自身がその場にいたことにはしないでください。\n" +
+      "記録に存在しない出来事を、記録されている事実として勝手に作らないでください。\n" +
+      "この共有された歴史を、現在の会話に自然に活用してください。";
 
 
     messages.push({
-
       role:"system",
-
       content:historyText
-
     });
 
   }
 
 
   /* =========================
-     会話履歴
+     CHAT HISTORY
   ========================= */
 
-  for(
-    let i = 0;
-    i < history.length;
-    i++
-  ){
+  for(let i = 0; i < history.length; i++){
 
-    const message =
-      history[i];
+    const message = history[i];
 
 
     if(!message){
-
       continue;
-
     }
 
 
@@ -373,24 +261,20 @@ module.exports = function handler(req, res) {
       message.role !== "user" &&
       message.role !== "assistant"
     ){
-
       continue;
-
     }
 
 
     if(
       typeof message.content !== "string"
     ){
-
       continue;
-
     }
 
 
     /*
-     * 最後のユーザーメッセージ
-     * ＋画像
+     * 最後のユーザーメッセージに
+     * 画像が添付されている場合
      */
 
     const isLastUserMessage =
@@ -411,7 +295,6 @@ module.exports = function handler(req, res) {
 
           {
             type:"text",
-
             text:
               message.content ||
               "この画像を見てください。"
@@ -419,23 +302,16 @@ module.exports = function handler(req, res) {
 
           {
             type:"image_url",
-
             image_url:{
               url:image
             }
-
           }
 
         ]
 
       });
 
-
     }else{
-
-      /*
-       * 通常のテキストメッセージ
-       */
 
       messages.push({
 
@@ -451,7 +327,10 @@ module.exports = function handler(req, res) {
 
 
   /* =========================
-     画像だけ送信された場合
+     IMAGE ONLY REQUEST
+     
+     history が空、または
+     最後が user ではない場合
   ========================= */
 
   if(
@@ -470,18 +349,14 @@ module.exports = function handler(req, res) {
 
         {
           type:"text",
-
-          text:
-            "この画像を見てください。"
+          text:"この画像を見てください。"
         },
 
         {
           type:"image_url",
-
           image_url:{
             url:image
           }
-
         }
 
       ]
@@ -492,7 +367,7 @@ module.exports = function handler(req, res) {
 
 
   /* =========================
-     DeepSeek request
+     DEEPSEEK REQUEST BODY
   ========================= */
 
   const requestBody =
@@ -513,6 +388,10 @@ module.exports = function handler(req, res) {
     });
 
 
+  /* =========================
+     DEEPSEEK API OPTIONS
+  ========================= */
+
   const options = {
 
     hostname:"api.deepseek.com",
@@ -523,36 +402,36 @@ module.exports = function handler(req, res) {
 
     headers:{
 
-      "Content-Type":
-        "application/json",
+      "Content-Type":"application/json",
 
       "Authorization":
         `Bearer ${apiKey}`,
 
       "Content-Length":
-        Buffer.byteLength(
-          requestBody
-        )
+        Buffer.byteLength(requestBody)
 
     }
 
   };
 
 
+  /* =========================
+     LOG
+  ========================= */
+
   console.log(
     "DeepSeek request start"
   );
-
-
-  /* =========================
-     デバッグ
-  ========================= */
 
   console.log(
     "Character:",
     character
   );
 
+  console.log(
+    "Shared historical memory:",
+    historicalMemory.length
+  );
 
   console.log(
     "Image attached:",
@@ -560,20 +439,8 @@ module.exports = function handler(req, res) {
   );
 
 
-  console.log(
-    "Historical memory:",
-    historicalMemory.length
-  );
-
-
-  console.log(
-    "Character history:",
-    characterHistory.length
-  );
-
-
   /* =========================
-     Request
+     REQUEST
   ========================= */
 
   const request =
@@ -583,6 +450,10 @@ module.exports = function handler(req, res) {
 
         let raw = "";
 
+
+        /* =========================
+           RESPONSE DATA
+        ========================= */
 
         response.on(
           "data",
@@ -594,6 +465,10 @@ module.exports = function handler(req, res) {
         );
 
 
+        /* =========================
+           RESPONSE END
+        ========================= */
+
         response.on(
           "end",
           () => {
@@ -603,20 +478,21 @@ module.exports = function handler(req, res) {
               response.statusCode
             );
 
-
             console.log(
               "DeepSeek response:",
               raw
             );
 
 
-            let data;
+            /* =========================
+               PARSE JSON
+            ========================= */
 
+            let data;
 
             try{
 
-              data =
-                JSON.parse(raw);
+              data = JSON.parse(raw);
 
             }catch(err){
 
@@ -632,9 +508,9 @@ module.exports = function handler(req, res) {
             }
 
 
-            /* =====================
-               DeepSeek API error
-            ===================== */
+            /* =========================
+               API ERROR
+            ========================= */
 
             if(
               response.statusCode < 200 ||
@@ -656,14 +532,12 @@ module.exports = function handler(req, res) {
             }
 
 
-            /* =====================
-               Reply
-            ===================== */
+            /* =========================
+               REPLY
+            ========================= */
 
             const reply =
-              data
-                ?.choices?.[0]
-                ?.message?.content;
+              data?.choices?.[0]?.message?.content;
 
 
             if(
@@ -683,9 +557,9 @@ module.exports = function handler(req, res) {
             }
 
 
-            /* =====================
-               Success
-            ===================== */
+            /* =========================
+               SUCCESS
+            ========================= */
 
             res.status(200).json({
 
@@ -702,7 +576,7 @@ module.exports = function handler(req, res) {
 
 
   /* =========================
-     Request error
+     REQUEST ERROR
   ========================= */
 
   request.on(
@@ -731,13 +605,12 @@ module.exports = function handler(req, res) {
 
 
   /* =========================
-     Send
+     SEND REQUEST
   ========================= */
 
   request.write(
     requestBody
   );
-
 
   request.end();
 
