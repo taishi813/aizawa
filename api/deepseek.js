@@ -1,5 +1,6 @@
 const https = require("https");
 
+
 module.exports = function handler(req, res) {
 
   /* =========================
@@ -48,12 +49,15 @@ module.exports = function handler(req, res) {
      API KEY
   ========================= */
 
-  const apiKey = process.env.DEEPSEEK_API_KEY;
+  const apiKey =
+    process.env.DEEPSEEK_API_KEY;
 
   if(!apiKey){
+
     res.status(500).json({
       error:"DEEPSEEK_API_KEY が設定されていません"
     });
+
     return;
   }
 
@@ -95,9 +99,6 @@ module.exports = function handler(req, res) {
 
   /* =========================
      SHARED HISTORICAL MEMORY
-     
-     全キャラクター共通の
-     「大志との歴史」
   ========================= */
 
   const historicalMemory =
@@ -116,23 +117,506 @@ module.exports = function handler(req, res) {
       : "";
 
 
+  /* =========================================================
+     関連する歴史を検索するためのテキストを作る
+     
+     最新のユーザー発言だけでなく、
+     直近の会話も少し見る。
+  ========================================================= */
+
+  function getSearchText(){
+
+    const parts = [];
+
+    /*
+     * 直近のユーザー発言を優先
+     */
+
+    for(
+      let i = history.length - 1;
+      i >= 0 && parts.length < 3;
+      i--
+    ){
+
+      const message = history[i];
+
+      if(
+        message &&
+        message.role === "user" &&
+        typeof message.content === "string"
+      ){
+
+        parts.unshift(
+          message.content
+        );
+
+      }
+
+    }
+
+
+    /*
+     * ユーザー発言が少ない場合は、
+     * 直近の会話も検索材料にする。
+     */
+
+    if(parts.length === 0){
+
+      for(
+        let i = Math.max(0, history.length - 4);
+        i < history.length;
+        i++
+      ){
+
+        const message = history[i];
+
+        if(
+          message &&
+          typeof message.content === "string"
+        ){
+
+          parts.push(
+            message.content
+          );
+
+        }
+
+      }
+
+    }
+
+
+    return parts.join(" ");
+
+  }
+
+
+  /* =========================================================
+     日本語の検索用トークンを作る
+     
+     日本語は英語のようにスペースで単語が分かれて
+     いないため、単純なsplitだけでは検索できない。
+     
+     そこで、
+     ・漢字
+     ・ひらがな
+     ・カタカナ
+     ・英数字
+     
+     をある程度の長さの塊として取り出す。
+  ========================================================= */
+
+  function tokenize(text){
+
+    if(!text){
+      return [];
+    }
+
+
+    const normalized =
+      text
+        .toLowerCase()
+        .replace(/[、。！？「」『』（）()［］\[\]【】,.!?]/g, " ");
+
+
+    const tokens = [];
+
+
+    /*
+     * 英数字の単語
+     */
+
+    const latinMatches =
+      normalized.match(
+        /[a-z0-9][a-z0-9_-]*/g
+      ) || [];
+
+
+    latinMatches.forEach(word => {
+
+      if(word.length >= 2){
+
+        tokens.push(word);
+
+      }
+
+    });
+
+
+    /*
+     * 漢字の連続
+     */
+
+    const kanjiMatches =
+      normalized.match(
+        /[\u3400-\u4dbf\u4e00-\u9fff]{2,}/g
+      ) || [];
+
+
+    kanjiMatches.forEach(word => {
+
+      tokens.push(word);
+
+      /*
+       * 長い漢字語は部分一致も使えるようにする
+       */
+
+      if(word.length >= 3){
+
+        for(
+          let i = 0;
+          i <= word.length - 2;
+          i++
+        ){
+
+          tokens.push(
+            word.slice(i, i + 2)
+          );
+
+        }
+
+      }
+
+    });
+
+
+    /*
+     * ひらがなの連続
+     */
+
+    const hiraganaMatches =
+      normalized.match(
+        /[\u3040-\u309f]{2,}/g
+      ) || [];
+
+
+    hiraganaMatches.forEach(word => {
+
+      /*
+       * 「する」「した」「いる」など、
+       * あまり意味を持たない短い一般語は除外
+       */
+
+      const ignored = [
+        "する",
+        "した",
+        "して",
+        "いる",
+        "ある",
+        "なる",
+        "なっ",
+        "です",
+        "ます",
+        "だった",
+        "これ",
+        "それ",
+        "あれ",
+        "ここ",
+        "そこ"
+      ];
+
+
+      if(!ignored.includes(word)){
+
+        tokens.push(word);
+
+      }
+
+    });
+
+
+    /*
+     * カタカナ
+     */
+
+    const katakanaMatches =
+      normalized.match(
+        /[\u30a0-\u30ff]{2,}/g
+      ) || [];
+
+
+    katakanaMatches.forEach(word => {
+
+      tokens.push(word);
+
+    });
+
+
+    /*
+     * 重複削除
+     */
+
+    return [
+      ...new Set(tokens)
+    ];
+
+  }
+
+
+  /* =========================================================
+     検索用テキスト
+  ========================================================= */
+
+  const searchText =
+    getSearchText();
+
+
+  const searchTokens =
+    tokenize(searchText);
+
+
+  /* =========================================================
+     現在のキャラクター名も検索材料にする
+     
+     ただし「現在のキャラクターだけ」に
+     絞るわけではない。
+  ========================================================= */
+
+  const characterToken =
+    String(character)
+      .toLowerCase();
+
+
+  /* =========================================================
+     日付による新しさ
+     
+     新しい記録を少し優先する。
+  ========================================================= */
+
+  function recencyScore(item){
+
+    if(!item || !item.date){
+      return 0;
+    }
+
+
+    const timestamp =
+      new Date(item.date).getTime();
+
+
+    if(Number.isNaN(timestamp)){
+      return 0;
+    }
+
+
+    const now =
+      Date.now();
+
+
+    const days =
+      Math.max(
+        0,
+        (now - timestamp) /
+        (1000 * 60 * 60 * 24)
+      );
+
+
+    /*
+     * 最大15点。
+     *
+     * 新しいほど高く、
+     * 古くなるほどゆっくり下がる。
+     */
+
+    return Math.max(
+      0,
+      15 - days * 0.05
+    );
+
+  }
+
+
+  /* =========================================================
+     歴史1件の関連度を計算
+  ========================================================= */
+
+  function calculateRelevance(item){
+
+    if(
+      !item ||
+      typeof item !== "object"
+    ){
+
+      return 0;
+
+    }
+
+
+    const itemCharacter =
+      String(
+        item.character || ""
+      ).toLowerCase();
+
+
+    const itemEvent =
+      String(
+        item.event || ""
+      ).toLowerCase();
+
+
+    const itemSummary =
+      String(
+        item.summary || ""
+      ).toLowerCase();
+
+
+    const searchableText =
+      `${itemCharacter} ${itemEvent} ${itemSummary}`;
+
+
+    let score = 0;
+
+
+    /* =========================
+       現在のキャラクター
+       
+       少し優先するだけ。
+       他キャラを排除しない。
+    ========================= */
+
+    if(
+      characterToken &&
+      itemCharacter.includes(characterToken)
+    ){
+
+      score += 8;
+
+    }
+
+
+    /* =========================
+       キーワード一致
+    ========================= */
+
+    searchTokens.forEach(token => {
+
+      if(!token){
+        return;
+      }
+
+
+      if(itemEvent.includes(token)){
+
+        score += 10;
+
+      }
+
+
+      if(itemSummary.includes(token)){
+
+        score += 7;
+
+      }
+
+
+      if(itemCharacter.includes(token)){
+
+        score += 5;
+
+      }
+
+    });
+
+
+    /* =========================
+       検索文そのものとの部分一致
+    ========================= */
+
+    if(
+      searchText &&
+      searchableText.includes(
+        searchText.toLowerCase()
+      )
+    ){
+
+      score += 20;
+
+    }
+
+
+    /* =========================
+       新しさ
+    ========================= */
+
+    score +=
+      recencyScore(item);
+
+
+    return score;
+
+  }
+
+
+  /* =========================================================
+     関連歴史を抽出
+     
+     最大10件。
+     
+     スコア0のものは基本的に送らない。
+  ========================================================= */
+
+  let relevantHistory = [];
+
+
+  if(historicalMemory.length > 0){
+
+    relevantHistory =
+      historicalMemory
+
+        .map(item => {
+
+          return {
+            item:item,
+            score:calculateRelevance(item)
+          };
+
+        })
+
+        .filter(result => {
+
+          return result.score > 0;
+
+        })
+
+        .sort((a, b) => {
+
+          return b.score - a.score;
+
+        })
+
+        .slice(0, 10)
+
+        .map(result => result.item);
+
+  }
+
+
+  /* =========================================================
+     検索結果が何もない場合
+     
+     完全に関係ない歴史を大量に送るくらいなら、
+     歴史なしで会話させる。
+  ========================================================= */
+
+
   /* =========================
      SYSTEM PROMPT
   ========================= */
 
-  let systemPrompt = clientPrompt;
+  let systemPrompt =
+    clientPrompt;
 
 
   /*
-   * フロント側からプロンプトが
-   * 渡されなかった場合は、
-   * キャラクター名.txt を読む
+   * フロントからプロンプトが渡されなかった場合、
+   * キャラクター.txt を読む。
    */
 
   if(!systemPrompt){
 
     const fs = require("fs");
     const path = require("path");
+
 
     try{
 
@@ -141,6 +625,7 @@ module.exports = function handler(req, res) {
           process.cwd(),
           `${character}.txt`
         );
+
 
       if(fs.existsSync(promptPath)){
 
@@ -178,37 +663,27 @@ module.exports = function handler(req, res) {
   if(systemPrompt){
 
     messages.push({
+
       role:"system",
+
       content:systemPrompt
+
     });
 
   }
 
 
-  /* =========================
-     SHARED HISTORICAL MEMORY
-     
-     ここではキャラクターによる
-     絞り込みを行わない。
-     
-     仁美との歴史も、
-     小倉優香との歴史も、
-     根本はるみとの歴史も、
-     全キャラクターから参照可能。
-  ========================= */
+  /* =========================================================
+     関連する歴史だけをSYSTEM MESSAGEとして追加
+  ========================================================= */
 
-  if(historicalMemory.length > 0){
+  if(relevantHistory.length > 0){
 
     let historyText =
-      "【大志との共有された過去の歴史】\n\n";
+      "【大志との過去の歴史：今回の会話に関連しそうな記録】\n\n";
 
 
-    historicalMemory.forEach(item => {
-
-      if(!item || typeof item !== "object"){
-        return;
-      }
-
+    relevantHistory.forEach(item => {
 
       historyText +=
         `日付: ${item.date || ""}\n`;
@@ -226,30 +701,37 @@ module.exports = function handler(req, res) {
 
 
     historyText +=
-      "この歴史は、大志とこの世界のキャラクターたちの間で起きた過去の出来事を記録した共有情報です。\n" +
-      "現在会話しているキャラクター自身の出来事だけでなく、他のキャラクターと大志との出来事も知識として参照できます。\n" +
-      "他のキャラクターと大志との出来事についても、必要に応じて自然に言及したり、質問したりできます。\n" +
-      "ただし、他のキャラクターが実際に経験した出来事を、現在会話している自分自身が直接経験したことのようには扱わないでください。\n" +
-      "例えば、相澤仁美と大志との出来事を小倉優香が知っている場合でも、小倉優香自身がその場にいたことにはしないでください。\n" +
-      "記録に存在しない出来事を、記録されている事実として勝手に作らないでください。\n" +
-      "この共有された歴史を、現在の会話に自然に活用してください。";
+      "この記録は、大志とこの世界のキャラクターたちとの過去の出来事です。\n" +
+      "現在会話しているキャラクターだけでなく、他のキャラクターと大志との出来事も参照できます。\n" +
+      "今回の会話に関連する場合は、他のキャラクターとの過去について自然に言及したり質問したりできます。\n" +
+      "ただし、他のキャラクターが経験した出来事を、現在会話している自分自身が直接経験したことのようには扱わないでください。\n" +
+      "記録にない出来事を、記録されている事実として勝手に作らないでください。\n" +
+      "この記録は今回の会話に関連する可能性が高いものだけが選ばれています。";
 
 
     messages.push({
+
       role:"system",
+
       content:historyText
+
     });
 
   }
 
 
-  /* =========================
+  /* =========================================================
      CHAT HISTORY
-  ========================= */
+  ========================================================= */
 
-  for(let i = 0; i < history.length; i++){
+  for(
+    let i = 0;
+    i < history.length;
+    i++
+  ){
 
-    const message = history[i];
+    const message =
+      history[i];
 
 
     if(!message){
@@ -261,21 +743,25 @@ module.exports = function handler(req, res) {
       message.role !== "user" &&
       message.role !== "assistant"
     ){
+
       continue;
+
     }
 
 
     if(
       typeof message.content !== "string"
     ){
+
       continue;
+
     }
 
 
-    /*
-     * 最後のユーザーメッセージに
-     * 画像が添付されている場合
-     */
+    /* =========================
+       最後のユーザーメッセージ
+       + 画像
+    ========================= */
 
     const isLastUserMessage =
       message.role === "user" &&
@@ -295,16 +781,20 @@ module.exports = function handler(req, res) {
 
           {
             type:"text",
+
             text:
               message.content ||
               "この画像を見てください。"
+
           },
 
           {
             type:"image_url",
+
             image_url:{
               url:image
             }
+
           }
 
         ]
@@ -326,12 +816,9 @@ module.exports = function handler(req, res) {
   }
 
 
-  /* =========================
+  /* =========================================================
      IMAGE ONLY REQUEST
-     
-     history が空、または
-     最後が user ではない場合
-  ========================= */
+  ========================================================= */
 
   if(
     image &&
@@ -354,9 +841,11 @@ module.exports = function handler(req, res) {
 
         {
           type:"image_url",
+
           image_url:{
             url:image
           }
+
         }
 
       ]
@@ -366,9 +855,9 @@ module.exports = function handler(req, res) {
   }
 
 
-  /* =========================
+  /* =========================================================
      DEEPSEEK REQUEST BODY
-  ========================= */
+  ========================================================= */
 
   const requestBody =
     JSON.stringify({
@@ -389,7 +878,7 @@ module.exports = function handler(req, res) {
 
 
   /* =========================
-     DEEPSEEK API OPTIONS
+     API OPTIONS
   ========================= */
 
   const options = {
@@ -402,7 +891,8 @@ module.exports = function handler(req, res) {
 
     headers:{
 
-      "Content-Type":"application/json",
+      "Content-Type":
+        "application/json",
 
       "Authorization":
         `Bearer ${apiKey}`,
@@ -429,8 +919,18 @@ module.exports = function handler(req, res) {
   );
 
   console.log(
-    "Shared historical memory:",
+    "Historical memory total:",
     historicalMemory.length
+  );
+
+  console.log(
+    "Relevant historical memory:",
+    relevantHistory.length
+  );
+
+  console.log(
+    "Search tokens:",
+    searchTokens.length
   );
 
   console.log(
@@ -485,14 +985,15 @@ module.exports = function handler(req, res) {
 
 
             /* =========================
-               PARSE JSON
+               JSON PARSE
             ========================= */
 
             let data;
 
             try{
 
-              data = JSON.parse(raw);
+              data =
+                JSON.parse(raw);
 
             }catch(err){
 
@@ -605,7 +1106,7 @@ module.exports = function handler(req, res) {
 
 
   /* =========================
-     SEND REQUEST
+     SEND
   ========================= */
 
   request.write(
