@@ -14,31 +14,50 @@
 <style>
 
 :root{
+
   --panel:rgba(255,255,255,0.96);
+
   --accent:#1976d2;
+
   --accent-light:#eaf3ff;
+
   --border:#d5e2f0;
+
   --text:#17212b;
+
   --chat-width:900px;
+
 }
 
+
 *{
+
   box-sizing:border-box;
+
 }
+
 
 html,
 body{
+
   margin:0;
+
   width:100%;
+
   height:100%;
+
   overflow:hidden;
+
   background:#ffffff;
+
   color:var(--text);
+
   font-family:
     -apple-system,
     BlinkMacSystemFont,
     "Helvetica Neue",
     sans-serif;
+
 }
 
 
@@ -115,12 +134,18 @@ body::after{
 
 }
 
+
 body::before{
+
   top:0;
+
 }
 
+
 body::after{
+
   bottom:0;
+
 }
 
 
@@ -177,8 +202,6 @@ body::after{
 }
 
 
-/* 開閉ボタン */
-
 .prompt-toggle{
 
   width:100%;
@@ -221,8 +244,6 @@ body::after{
 }
 
 
-/* 矢印 */
-
 .prompt-arrow{
 
   font-size:14px;
@@ -233,8 +254,6 @@ body::after{
 }
 
 
-/* 開いている状態 */
-
 .prompt-area.open
 .prompt-arrow{
 
@@ -243,8 +262,6 @@ body::after{
 
 }
 
-
-/* プロンプト本体 */
 
 .prompt-content{
 
@@ -258,8 +275,6 @@ body::after{
 
 }
 
-
-/* 開いている状態 */
 
 .prompt-area.open
 .prompt-content{
@@ -318,8 +333,6 @@ body::after{
 }
 
 
-/* 開閉ボタン */
-
 .history-toggle{
 
   width:100%;
@@ -362,8 +375,6 @@ body::after{
 }
 
 
-/* 矢印 */
-
 .history-arrow{
 
   font-size:14px;
@@ -382,8 +393,6 @@ body::after{
 
 }
 
-
-/* 歴史本体 */
 
 .history-content{
 
@@ -406,57 +415,168 @@ body::after{
 }
 
 
-/* JSON入力 */
+/* =========================
+   歴史カード一覧
+========================= */
 
-#historyJson{
+.history-cards{
 
-  width:100%;
+  display:flex;
 
-  height:180px;
+  flex-direction:column;
 
-  resize:vertical;
+  gap:10px;
+
+  max-height:300px;
+
+  overflow-y:auto;
+
+  padding:2px;
+
+}
+
+
+/* =========================
+   歴史カード
+========================= */
+
+.history-card{
+
+  padding:12px 14px;
 
   border:1px solid var(--border);
 
-  border-radius:10px;
+  border-radius:12px;
 
-  padding:10px;
+  background:#f8fbff;
 
-  outline:none;
+  box-shadow:
+    0 1px 3px rgba(0,0,0,0.04);
 
-  font-family:
-    ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    Monaco,
-    Consolas,
-    monospace;
+}
+
+
+/* =========================
+   日付
+========================= */
+
+.history-date{
+
+  font-size:11px;
+
+  color:#718096;
+
+  margin-bottom:3px;
+
+}
+
+
+/* =========================
+   キャラクター
+========================= */
+
+.history-character{
+
+  font-size:14px;
+
+  font-weight:bold;
+
+  color:var(--accent);
+
+  margin-bottom:4px;
+
+}
+
+
+/* =========================
+   場所
+========================= */
+
+.history-location{
+
+  font-size:12px;
+
+  color:#52616f;
+
+  margin-bottom:8px;
+
+}
+
+
+/* =========================
+   出来事
+========================= */
+
+.history-event{
+
+  font-size:14px;
+
+  font-weight:bold;
+
+  color:var(--text);
+
+  margin-bottom:5px;
+
+}
+
+
+/* =========================
+   概要
+========================= */
+
+.history-summary{
 
   font-size:13px;
 
   line-height:1.6;
 
-  color:var(--text);
+  color:#4a5568;
+
+}
+
+
+/* =========================
+   歴史がない場合
+========================= */
+
+.history-empty{
+
+  padding:16px;
+
+  text-align:center;
+
+  font-size:13px;
+
+  color:#718096;
 
   background:#f8fbff;
 
-}
+  border:1px solid var(--border);
 
-
-#historyJson:focus{
-
-  border-color:var(--accent);
-
-  background:#ffffff;
+  border-radius:10px;
 
 }
 
 
-/* JSON説明 */
+/* =========================
+   JSON本体
+   現在は裏側で保持
+========================= */
+
+#historyJson{
+
+  display:none;
+
+}
+
+
+/* =========================
+   説明
+========================= */
 
 .history-note{
 
-  margin-top:6px;
+  margin-top:8px;
 
   font-size:11px;
 
@@ -837,9 +957,9 @@ textarea#input:focus{
   }
 
 
-  #historyJson{
+  .history-cards{
 
-    height:200px;
+    max-height:300px;
 
   }
 
@@ -972,9 +1092,9 @@ textarea#input:focus{
   }
 
 
-  #historyJson{
+  .history-cards{
 
-    height:160px;
+    max-height:240px;
 
   }
 
@@ -1058,9 +1178,23 @@ textarea#input:focus{
   }
 
 
-  #historyJson{
+  .history-cards{
 
-    height:150px;
+    max-height:260px;
+
+    gap:8px;
+
+  }
+
+
+  .history-card{
+
+    padding:10px 12px;
+
+  }
+
+
+  .history-summary{
 
     font-size:12px;
 
@@ -1228,7 +1362,9 @@ textarea#input:focus{
       <span
         id="promptArrow"
         class="prompt-arrow">
+
         ▼
+
       </span>
 
     </button>
@@ -1282,22 +1418,28 @@ textarea#input:focus{
       class="history-content">
 
 
+      <!-- =====================
+           歴史カード
+      ====================== -->
+
+      <div
+        id="historyCards"
+        class="history-cards">
+      </div>
+
+
+      <!--
+        JSON本体は互換性維持のため残しています。
+        普段の画面には表示しません。
+      -->
+
       <textarea
-        id="historyJson"
-        placeholder='[
-  {
-    "date": "2026-09-18",
-    "character": "相澤仁美",
-    "event": "出来事",
-    "summary": "大志との出来事を書く"
-  }
-]'></textarea>
+        id="historyJson"></textarea>
 
 
       <div class="history-note">
 
-        history.json を全キャラクターで共有します。
-        ここで編集した内容は今回のチャットからAPIへ送信されます。
+        history.json を全キャラクターで共有しています。
 
       </div>
 
@@ -1354,8 +1496,6 @@ textarea#input:focus{
   <div class="input-area">
 
 
-    <!-- 画像 -->
-
     <button
       id="imageBtn"
       type="button"
@@ -1372,14 +1512,10 @@ textarea#input:focus{
       accept="image/jpeg,image/png,image/gif,image/webp">
 
 
-    <!-- テキスト -->
-
     <textarea
       id="input"
       placeholder="メッセージ入力"></textarea>
 
-
-    <!-- 送信 -->
 
     <button
       id="sendBtn"
@@ -1505,6 +1641,12 @@ const historyJson =
   );
 
 
+const historyCards =
+  document.getElementById(
+    "historyCards"
+  );
+
+
 /* =========================
    現在のチャット履歴
 ========================= */
@@ -1544,7 +1686,7 @@ promptToggle.addEventListener(
 
 
 /* =========================
-   歴史JSON開閉
+   歴史開閉
 ========================= */
 
 historyToggle.addEventListener(
@@ -1560,7 +1702,192 @@ historyToggle.addEventListener(
 
 
 /* =========================
-   共通history.json読み込み
+   歴史カード表示
+========================= */
+
+function renderHistoryCards(
+  data
+){
+
+  historyCards.innerHTML = "";
+
+
+  if(
+    !Array.isArray(data) ||
+    data.length === 0
+  ){
+
+    const empty =
+      document.createElement(
+        "div"
+      );
+
+    empty.className =
+      "history-empty";
+
+    empty.textContent =
+      "まだ歴史がありません。";
+
+    historyCards.appendChild(
+      empty
+    );
+
+    return;
+
+  }
+
+
+  /*
+   * 新しい出来事を上に表示
+   */
+
+  const sorted =
+    [...data].sort(
+      (a,b) =>
+        String(b.date || "")
+        .localeCompare(
+          String(a.date || "")
+        )
+    );
+
+
+  sorted.forEach(
+    item => {
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+      card.className =
+        "history-card";
+
+
+      /* =====================
+         日付
+      ===================== */
+
+      const date =
+        document.createElement(
+          "div"
+        );
+
+      date.className =
+        "history-date";
+
+      date.textContent =
+        item.date || "";
+
+      card.appendChild(
+        date
+      );
+
+
+      /* =====================
+         キャラクター
+      ===================== */
+
+      const character =
+        document.createElement(
+          "div"
+        );
+
+      character.className =
+        "history-character";
+
+      character.textContent =
+        item.character || "";
+
+      card.appendChild(
+        character
+      );
+
+
+      /* =====================
+         場所
+      ===================== */
+
+      if(item.location){
+
+        const location =
+          document.createElement(
+            "div"
+          );
+
+        location.className =
+          "history-location";
+
+        location.textContent =
+          "📍 " +
+          item.location;
+
+        card.appendChild(
+          location
+        );
+
+      }
+
+
+      /* =====================
+         出来事
+      ===================== */
+
+      if(item.event){
+
+        const event =
+          document.createElement(
+            "div"
+          );
+
+        event.className =
+          "history-event";
+
+        event.textContent =
+          item.event;
+
+        card.appendChild(
+          event
+        );
+
+      }
+
+
+      /* =====================
+         概要
+      ===================== */
+
+      if(item.summary){
+
+        const summary =
+          document.createElement(
+            "div"
+          );
+
+        summary.className =
+          "history-summary";
+
+        summary.textContent =
+          item.summary;
+
+        card.appendChild(
+          summary
+        );
+
+      }
+
+
+      historyCards.appendChild(
+        card
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================
+   history.json読み込み
 ========================= */
 
 async function loadHistoricalMemory(){
@@ -1584,6 +1911,11 @@ async function loadHistoricalMemory(){
 
       historyJson.value =
         "[]";
+
+
+      renderHistoryCards(
+        []
+      );
 
       return;
 
@@ -1615,6 +1947,11 @@ async function loadHistoricalMemory(){
       );
 
 
+    renderHistoryCards(
+      historicalMemory
+    );
+
+
   }catch(err){
 
     console.error(
@@ -1629,64 +1966,31 @@ async function loadHistoricalMemory(){
     historyJson.value =
       "[]";
 
+
+    renderHistoryCards(
+      []
+    );
+
   }
 
 }
 
 
 /* =========================
-   編集されたJSONを取得
+   現在の歴史データ取得
 ========================= */
 
 function getHistoricalMemory(){
 
-  const text =
-    historyJson.value.trim();
+  /*
+   * history.jsonを読み込んだデータを
+   * そのまま使用する。
+   *
+   * JSON入力欄は現在非表示なので、
+   * 普段の送信時にJSON.parseする必要はない。
+   */
 
-
-  if(!text){
-
-    return [];
-
-  }
-
-
-  let data;
-
-
-  try{
-
-    data =
-      JSON.parse(text);
-
-  }catch(err){
-
-    alert(
-      "大志との歴史のJSONにエラーがあります。\n\n" +
-      err.message
-    );
-
-    return null;
-
-  }
-
-
-  if(!Array.isArray(data)){
-
-    alert(
-      "大志との歴史はJSON配列で入力してください。"
-    );
-
-    return null;
-
-  }
-
-
-  historicalMemory =
-    data;
-
-
-  return data;
+  return historicalMemory;
 
 }
 
@@ -1701,7 +2005,12 @@ async function applyCharacter(){
     characterSelect.value;
 
 
-  if(char === "normal"){
+  /*
+   * 現在のselectでは
+   * ブランクのvalueがmanager。
+   */
+
+  if(char === "manager"){
 
     characterImg.style.display =
       "none";
@@ -1712,7 +2021,8 @@ async function applyCharacter(){
     bg.style.background =
       "#eef5fb";
 
-    prompt.value = "";
+    prompt.value =
+      "";
 
     return;
 
@@ -1780,9 +2090,11 @@ characterSelect.addEventListener(
 
     removeSelectedImage();
 
+
     /*
      * history.jsonは全員共通なので
-     * ここでは再読み込みしない
+     * キャラクター変更時には
+     * 再読み込みしない。
      */
 
     applyCharacter();
@@ -1896,7 +2208,8 @@ imageInput.addEventListener(
         "JPEG、PNG、GIF、WebPの画像を選択してください。"
       );
 
-      imageInput.value = "";
+      imageInput.value =
+        "";
 
       return;
 
@@ -1989,21 +2302,11 @@ async function send(){
 
 
   /* =====================
-     歴史JSON確認
+     歴史
   ===================== */
 
   const currentHistoricalMemory =
     getHistoricalMemory();
-
-
-  if(
-    currentHistoricalMemory ===
-    null
-  ){
-
-    return;
-
-  }
 
 
   /* =====================
@@ -2027,7 +2330,8 @@ async function send(){
   }
 
 
-  input.value = "";
+  input.value =
+    "";
 
 
   /* =====================
@@ -2123,6 +2427,7 @@ async function send(){
             })
 
         }
+
       );
 
 
