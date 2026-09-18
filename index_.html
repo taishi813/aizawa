@@ -14,11 +14,12 @@
 <style>
 
 :root{
-  --panel: rgba(255,255,255,0.94);
-  --accent: #1976d2;
-  --accent-light: #eaf3ff;
-  --border: #d5e2f0;
-  --text: #17212b;
+  --panel:rgba(255,255,255,0.96);
+  --accent:#1976d2;
+  --accent-light:#eaf3ff;
+  --border:#d5e2f0;
+  --text:#17212b;
+  --chat-width:900px;
 }
 
 *{
@@ -33,39 +34,11 @@ body{
   overflow:hidden;
   background:#ffffff;
   color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-}
-
-
-/* =========================
-   上下の帯
-========================= */
-
-body::before,
-body::after{
-
-  content:"";
-
-  position:fixed;
-
-  left:0;
-
-  width:100%;
-
-  height:60px;
-
-  background:#ffffff;
-
-  z-index:10;
-
-}
-
-body::before{
-  top:0;
-}
-
-body::after{
-  bottom:0;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Helvetica Neue",
+    sans-serif;
 }
 
 
@@ -120,7 +93,39 @@ body::after{
 
 
 /* =========================
-   UI
+   上下の白帯
+========================= */
+
+body::before,
+body::after{
+
+  content:"";
+
+  position:fixed;
+
+  left:0;
+
+  width:100%;
+
+  height:60px;
+
+  background:#ffffff;
+
+  z-index:10;
+
+}
+
+body::before{
+  top:0;
+}
+
+body::after{
+  bottom:0;
+}
+
+
+/* =========================
+   メインパネル
 ========================= */
 
 .left-panel{
@@ -133,7 +138,7 @@ body::after{
 
   left:0;
 
-  width:45%;
+  width:55%;
 
   display:flex;
 
@@ -150,7 +155,7 @@ body::after{
 
 .top-bar{
 
-  padding:10px;
+  padding:10px 18px;
 
   background:var(--panel);
 
@@ -165,8 +170,6 @@ body::after{
 
 .prompt-area{
 
-  padding:10px;
-
   background:#ffffff;
 
   border-bottom:1px solid var(--border);
@@ -174,15 +177,94 @@ body::after{
 }
 
 
-.prompt-label{
+/* 開閉ボタン */
+
+.prompt-toggle{
+
+  width:100%;
+
+  height:42px;
+
+  padding:
+    0
+    18px;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:space-between;
+
+  border:none;
+
+  border-radius:0;
+
+  background:#ffffff;
+
+  color:var(--accent);
 
   font-size:13px;
 
   font-weight:bold;
 
-  color:#1976d2;
+  text-align:left;
 
-  margin-bottom:6px;
+  cursor:pointer;
+
+}
+
+
+.prompt-toggle:hover{
+
+  background:#f8fbff;
+
+}
+
+
+/* 矢印 */
+
+.prompt-arrow{
+
+  font-size:14px;
+
+  transition:
+    transform 0.2s ease;
+
+}
+
+
+/* 開いている状態 */
+
+.prompt-area.open
+.prompt-arrow{
+
+  transform:
+    rotate(180deg);
+
+}
+
+
+/* プロンプト本体 */
+
+.prompt-content{
+
+  display:none;
+
+  padding:
+    0
+    18px
+    12px
+    18px;
+
+}
+
+
+/* 開いている状態 */
+
+.prompt-area.open
+.prompt-content{
+
+  display:block;
 
 }
 
@@ -224,6 +306,168 @@ body::after{
 
 
 /* =========================
+   大志との歴史
+========================= */
+
+.history-area{
+
+  background:#ffffff;
+
+  border-bottom:1px solid var(--border);
+
+}
+
+
+/* 開閉ボタン */
+
+.history-toggle{
+
+  width:100%;
+
+  height:42px;
+
+  padding:
+    0
+    18px;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:space-between;
+
+  border:none;
+
+  border-radius:0;
+
+  background:#ffffff;
+
+  color:var(--accent);
+
+  font-size:13px;
+
+  font-weight:bold;
+
+  text-align:left;
+
+  cursor:pointer;
+
+}
+
+
+.history-toggle:hover{
+
+  background:#f8fbff;
+
+}
+
+
+/* 矢印 */
+
+.history-arrow{
+
+  font-size:14px;
+
+  transition:
+    transform 0.2s ease;
+
+}
+
+
+.history-area.open
+.history-arrow{
+
+  transform:
+    rotate(180deg);
+
+}
+
+
+/* 歴史本体 */
+
+.history-content{
+
+  display:none;
+
+  padding:
+    0
+    18px
+    12px
+    18px;
+
+}
+
+
+.history-area.open
+.history-content{
+
+  display:block;
+
+}
+
+
+/* JSON入力 */
+
+#historyJson{
+
+  width:100%;
+
+  height:180px;
+
+  resize:vertical;
+
+  border:1px solid var(--border);
+
+  border-radius:10px;
+
+  padding:10px;
+
+  outline:none;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+
+  font-size:13px;
+
+  line-height:1.6;
+
+  color:var(--text);
+
+  background:#f8fbff;
+
+}
+
+
+#historyJson:focus{
+
+  border-color:var(--accent);
+
+  background:#ffffff;
+
+}
+
+
+/* JSON説明 */
+
+.history-note{
+
+  margin-top:6px;
+
+  font-size:11px;
+
+  line-height:1.5;
+
+  color:#718096;
+
+}
+
+
+/* =========================
    select
 ========================= */
 
@@ -256,14 +500,16 @@ select{
 
   overflow-y:auto;
 
-  padding:16px;
+  padding:
+    24px
+    max(24px, calc((100% - var(--chat-width)) / 2));
 
   background:
     linear-gradient(
       to right,
-      rgba(255,255,255,0.96),
-      rgba(255,255,255,0.78),
-      rgba(255,255,255,0)
+      rgba(255,255,255,0.97),
+      rgba(255,255,255,0.88),
+      rgba(255,255,255,0.45)
     );
 
 }
@@ -277,9 +523,9 @@ select{
 
   max-width:90%;
 
-  margin-bottom:14px;
+  margin-bottom:16px;
 
-  padding:12px 16px;
+  padding:13px 17px;
 
   border-radius:16px;
 
@@ -288,6 +534,8 @@ select{
   white-space:pre-wrap;
 
   word-break:break-word;
+
+  font-size:15px;
 
 }
 
@@ -305,7 +553,7 @@ select{
 
 .ai{
 
-  background:rgba(255,255,255,0.9);
+  background:rgba(255,255,255,0.94);
 
   border:1px solid var(--border);
 
@@ -322,7 +570,7 @@ select{
 
   display:none;
 
-  padding:8px 10px;
+  padding:8px 18px;
 
   background:#ffffff;
 
@@ -391,7 +639,7 @@ select{
 
 
 /* =========================
-   入力
+   入力エリア
 ========================= */
 
 .input-area{
@@ -400,7 +648,7 @@ select{
 
   gap:10px;
 
-  padding:10px;
+  padding:10px 18px;
 
   background:#ffffff;
 
@@ -426,6 +674,8 @@ textarea#input{
   padding:10px;
 
   font-size:16px;
+
+  line-height:1.5;
 
   color:var(--text);
 
@@ -473,8 +723,6 @@ textarea#input:focus{
 }
 
 
-/* 実際のファイル入力は非表示 */
-
 #imageInput{
 
   display:none;
@@ -514,9 +762,228 @@ textarea#input:focus{
 }
 
 
-/* =========================
+/* =========================================================
+   PC / MacBook
+========================================================= */
+
+@media (min-width:769px){
+
+  .left-panel{
+
+    width:70%;
+
+    top:0;
+
+    bottom:0;
+
+    background:
+      rgba(255,255,255,0.08);
+
+  }
+
+
+  body::before,
+  body::after{
+
+    display:none;
+
+  }
+
+
+  .character{
+
+    max-width:45%;
+
+    height:95%;
+
+  }
+
+
+  .top-bar{
+
+    padding:
+      14px
+      24px;
+
+  }
+
+
+  .prompt-toggle,
+  .history-toggle{
+
+    padding:
+      0
+      24px;
+
+  }
+
+
+  .prompt-content,
+  .history-content{
+
+    padding:
+      0
+      24px
+      14px
+      24px;
+
+  }
+
+
+  #prompt{
+
+    height:150px;
+
+  }
+
+
+  #historyJson{
+
+    height:200px;
+
+  }
+
+
+  .chat{
+
+    padding-top:28px;
+
+    padding-bottom:28px;
+
+    padding-left:
+      max(
+        30px,
+        calc((100% - var(--chat-width)) / 2)
+      );
+
+    padding-right:
+      max(
+        30px,
+        calc((100% - var(--chat-width)) / 2)
+      );
+
+  }
+
+
+  .message{
+
+    max-width:78%;
+
+    font-size:16px;
+
+    margin-bottom:18px;
+
+    padding:
+      14px
+      18px;
+
+  }
+
+
+  .input-area{
+
+    padding:
+      14px
+      24px;
+
+  }
+
+
+  textarea#input{
+
+    height:64px;
+
+  }
+
+
+  .image-preview-area{
+
+    padding:
+      10px
+      24px;
+
+  }
+
+}
+
+
+/* =========================================================
+   大きめのMac / PC
+========================================================= */
+
+@media (min-width:1200px){
+
+  .left-panel{
+
+    width:72%;
+
+  }
+
+
+  .character{
+
+    max-width:42%;
+
+  }
+
+
+  .message{
+
+    max-width:75%;
+
+  }
+
+}
+
+
+/* =========================================================
+   小さいPC / MacBook
+========================================================= */
+
+@media (min-width:769px) and (max-width:1100px){
+
+  .left-panel{
+
+    width:68%;
+
+  }
+
+
+  .character{
+
+    max-width:48%;
+
+    opacity:0.8;
+
+  }
+
+
+  .message{
+
+    max-width:82%;
+
+  }
+
+
+  #prompt{
+
+    height:125px;
+
+  }
+
+
+  #historyJson{
+
+    height:160px;
+
+  }
+
+}
+
+
+/* =========================================================
    スマホ
-========================= */
+========================================================= */
 
 @media (max-width:768px){
 
@@ -543,6 +1010,8 @@ textarea#input:focus{
 
     left:50%;
 
+    right:auto;
+
     transform:
       translateX(-50%);
 
@@ -553,9 +1022,31 @@ textarea#input:focus{
   }
 
 
-  .prompt-area{
+  .top-bar{
 
     padding:8px;
+
+  }
+
+
+  .prompt-toggle,
+  .history-toggle{
+
+    padding:
+      0
+      8px;
+
+  }
+
+
+  .prompt-content,
+  .history-content{
+
+    padding:
+      0
+      8px
+      8px
+      8px;
 
   }
 
@@ -567,9 +1058,42 @@ textarea#input:focus{
   }
 
 
+  #historyJson{
+
+    height:150px;
+
+    font-size:12px;
+
+  }
+
+
+  .chat{
+
+    padding:16px;
+
+    background:
+      linear-gradient(
+        to right,
+        rgba(255,255,255,0.96),
+        rgba(255,255,255,0.78),
+        rgba(255,255,255,0)
+      );
+
+  }
+
+
   .message{
 
     max-width:96%;
+
+    font-size:15px;
+
+  }
+
+
+  .image-preview-area{
+
+    padding:8px;
 
   }
 
@@ -579,6 +1103,13 @@ textarea#input:focus{
     max-width:140px;
 
     max-height:100px;
+
+  }
+
+
+  .input-area{
+
+    padding:10px;
 
   }
 
@@ -680,15 +1211,99 @@ textarea#input:focus{
        基本プロンプト
   ====================== -->
 
-  <div class="prompt-area">
+  <div
+    id="promptArea"
+    class="prompt-area">
 
-    <div class="prompt-label">
-      基本プロンプト
+
+    <button
+      id="promptToggle"
+      class="prompt-toggle"
+      type="button">
+
+      <span>
+        基本プロンプト
+      </span>
+
+      <span
+        id="promptArrow"
+        class="prompt-arrow">
+        ▼
+      </span>
+
+    </button>
+
+
+    <div
+      id="promptContent"
+      class="prompt-content">
+
+      <textarea
+        id="prompt"
+        placeholder="このキャラクターの基本設定を入力"></textarea>
+
     </div>
 
-    <textarea
-      id="prompt"
-      placeholder="このキャラクターの基本設定を入力"></textarea>
+
+  </div>
+
+
+  <!-- =====================
+       大志との歴史
+  ====================== -->
+
+  <div
+    id="historyArea"
+    class="history-area">
+
+
+    <button
+      id="historyToggle"
+      class="history-toggle"
+      type="button">
+
+      <span>
+        大志との歴史
+      </span>
+
+      <span
+        id="historyArrow"
+        class="history-arrow">
+
+        ▼
+
+      </span>
+
+    </button>
+
+
+    <div
+      id="historyContent"
+      class="history-content">
+
+
+      <textarea
+        id="historyJson"
+        placeholder='[
+  {
+    "date": "2026-09-18",
+    "character": "相澤仁美",
+    "event": "出来事",
+    "summary": "大志との出来事を書く"
+  }
+]'></textarea>
+
+
+      <div class="history-note">
+
+        history.json を全キャラクターで共有します。
+        ここで編集した内容は今回のチャットからAPIへ送信されます。
+
+      </div>
+
+
+    </div>
+
 
   </div>
 
@@ -697,29 +1312,34 @@ textarea#input:focus{
        チャット
   ====================== -->
 
-  <div id="chat"
-       class="chat">
+  <div
+    id="chat"
+    class="chat">
   </div>
 
 
   <!-- =====================
        画像プレビュー
-  ====================== -->
+  ===================== -->
 
   <div
     id="imagePreviewArea"
     class="image-preview-area">
 
-    <div class="image-preview-container">
+    <div
+      class="image-preview-container">
 
       <img
         id="imagePreview"
         alt="画像プレビュー">
 
+
       <button
         id="removeImageBtn"
         type="button">
+
         ×
+
       </button>
 
     </div>
@@ -729,12 +1349,12 @@ textarea#input:focus{
 
   <!-- =====================
        入力
-  ====================== -->
+  ===================== -->
 
   <div class="input-area">
 
 
-    <!-- 画像選択 -->
+    <!-- 画像 -->
 
     <button
       id="imageBtn"
@@ -752,7 +1372,7 @@ textarea#input:focus{
       accept="image/jpeg,image/png,image/gif,image/webp">
 
 
-    <!-- テキスト入力 -->
+    <!-- テキスト -->
 
     <textarea
       id="input"
@@ -855,18 +1475,220 @@ const removeImageBtn =
   );
 
 
+const promptArea =
+  document.getElementById(
+    "promptArea"
+  );
+
+
+const promptToggle =
+  document.getElementById(
+    "promptToggle"
+  );
+
+
+const historyArea =
+  document.getElementById(
+    "historyArea"
+  );
+
+
+const historyToggle =
+  document.getElementById(
+    "historyToggle"
+  );
+
+
+const historyJson =
+  document.getElementById(
+    "historyJson"
+  );
+
+
 /* =========================
-   履歴
+   現在のチャット履歴
 ========================= */
 
 let history = [];
 
 
 /* =========================
-   現在選択されている画像
+   大志との歴史
+   全キャラクター共通
+========================= */
+
+let historicalMemory = [];
+
+
+/* =========================
+   選択画像
 ========================= */
 
 let selectedImage = null;
+
+
+/* =========================
+   基本プロンプト開閉
+========================= */
+
+promptToggle.addEventListener(
+  "click",
+  () => {
+
+    promptArea.classList.toggle(
+      "open"
+    );
+
+  }
+);
+
+
+/* =========================
+   歴史JSON開閉
+========================= */
+
+historyToggle.addEventListener(
+  "click",
+  () => {
+
+    historyArea.classList.toggle(
+      "open"
+    );
+
+  }
+);
+
+
+/* =========================
+   共通history.json読み込み
+========================= */
+
+async function loadHistoricalMemory(){
+
+  try{
+
+    const response =
+      await fetch(
+        "history.json"
+      );
+
+
+    if(!response.ok){
+
+      console.warn(
+        "HISTORY LOAD ERROR:",
+        response.status
+      );
+
+      historicalMemory = [];
+
+      historyJson.value =
+        "[]";
+
+      return;
+
+    }
+
+
+    const data =
+      await response.json();
+
+
+    if(!Array.isArray(data)){
+
+      throw new Error(
+        "history.json は配列形式である必要があります。"
+      );
+
+    }
+
+
+    historicalMemory =
+      data;
+
+
+    historyJson.value =
+      JSON.stringify(
+        historicalMemory,
+        null,
+        2
+      );
+
+
+  }catch(err){
+
+    console.error(
+      "HISTORY JSON LOAD ERROR:",
+      err
+    );
+
+
+    historicalMemory = [];
+
+
+    historyJson.value =
+      "[]";
+
+  }
+
+}
+
+
+/* =========================
+   編集されたJSONを取得
+========================= */
+
+function getHistoricalMemory(){
+
+  const text =
+    historyJson.value.trim();
+
+
+  if(!text){
+
+    return [];
+
+  }
+
+
+  let data;
+
+
+  try{
+
+    data =
+      JSON.parse(text);
+
+  }catch(err){
+
+    alert(
+      "大志との歴史のJSONにエラーがあります。\n\n" +
+      err.message
+    );
+
+    return null;
+
+  }
+
+
+  if(!Array.isArray(data)){
+
+    alert(
+      "大志との歴史はJSON配列で入力してください。"
+    );
+
+    return null;
+
+  }
+
+
+  historicalMemory =
+    data;
+
+
+  return data;
+
+}
 
 
 /* =========================
@@ -908,10 +1730,6 @@ async function applyCharacter(){
   bg.style.backgroundImage =
     `url('${char}.jpg')`;
 
-
-  /* =====================
-     基本プロンプト読み込み
-  ===================== */
 
   try{
 
@@ -962,6 +1780,11 @@ characterSelect.addEventListener(
 
     removeSelectedImage();
 
+    /*
+     * history.jsonは全員共通なので
+     * ここでは再読み込みしない
+     */
+
     applyCharacter();
 
   }
@@ -973,6 +1796,8 @@ characterSelect.addEventListener(
 ========================= */
 
 applyCharacter();
+
+loadHistoricalMemory();
 
 
 /* =========================
@@ -1048,13 +1873,16 @@ imageInput.addEventListener(
     }
 
 
-    /* 対応形式チェック */
-
     const allowedTypes = [
+
       "image/jpeg",
+
       "image/png",
+
       "image/gif",
+
       "image/webp"
+
     ];
 
 
@@ -1074,8 +1902,6 @@ imageInput.addEventListener(
 
     }
 
-
-    /* FileReaderでBase64化 */
 
     const reader =
       new FileReader();
@@ -1152,13 +1978,27 @@ async function send(){
     input.value.trim();
 
 
-  /*
-   * テキストも画像もない場合
-   */
-
   if(
     !text &&
     !selectedImage
+  ){
+
+    return;
+
+  }
+
+
+  /* =====================
+     歴史JSON確認
+  ===================== */
+
+  const currentHistoricalMemory =
+    getHistoricalMemory();
+
+
+  if(
+    currentHistoricalMemory ===
+    null
   ){
 
     return;
@@ -1193,14 +2033,6 @@ async function send(){
   /* =====================
      履歴
   ===================== */
-
-  /*
-   * 現時点ではhistoryには
-   * テキストだけを保存する。
-   *
-   * 画像そのものは今回のAPI送信時だけ
-   * 使用する。
-   */
 
   if(text){
 
@@ -1242,27 +2074,18 @@ async function send(){
   );
 
 
-  /*
-   * 今回送信する画像を保持
-   *
-   * API通信中に画像選択を変更しても
-   * 今回の送信内容が変わらないようにする
-   */
+  /* =====================
+     今回の画像
+  ===================== */
 
   const imageToSend =
     selectedImage;
 
 
-  /* 送信後は画像を解除 */
-
   removeSelectedImage();
 
 
   try{
-
-    /* =====================
-       API
-    ===================== */
 
     const response =
       await fetch(
@@ -1282,13 +2105,17 @@ async function send(){
           body:
             JSON.stringify({
 
-              history:history,
+              history:
+                history,
 
               character:
                 characterSelect.value,
 
               prompt:
                 prompt.value,
+
+              historicalMemory:
+                currentHistoricalMemory,
 
               image:
                 imageToSend
@@ -1298,8 +2125,6 @@ async function send(){
         }
       );
 
-
-    /* textとして取得 */
 
     const raw =
       await response.text();
@@ -1475,7 +2300,7 @@ input.addEventListener(
 
 
 /* =========================
-   ボタン
+   送信ボタン
 ========================= */
 
 sendBtn.onclick =
