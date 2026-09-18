@@ -78,20 +78,27 @@ module.exports = function handler(req, res) {
     req.body || {};
 
 
+  /* =========================
+     現在のチャット履歴
+  ========================= */
+
   const history =
     Array.isArray(body.history)
       ? body.history
       : [];
 
 
+  /* =========================
+     キャラクター
+  ========================= */
+
   const character =
     body.character || "manager";
 
 
-  /*
-   * フロント側から送られてきた
-   * 編集済み基本プロンプト
-   */
+  /* =========================
+     基本プロンプト
+  ========================= */
 
   const clientPrompt =
     typeof body.prompt === "string"
@@ -99,14 +106,20 @@ module.exports = function handler(req, res) {
       : "";
 
 
-  /*
-   * 今回送信する画像
-   *
-   * Base64 Data URL
-   *
-   * 例：
-   * data:image/jpeg;base64,/9j/4AAQ...
-   */
+  /* =========================
+     大志との歴史
+     history.json
+  ========================= */
+
+  const historicalMemory =
+    Array.isArray(body.historicalMemory)
+      ? body.historicalMemory
+      : [];
+
+
+  /* =========================
+     今回の画像
+  ========================= */
 
   const image =
     typeof body.image === "string"
@@ -168,15 +181,114 @@ module.exports = function handler(req, res) {
 
 
   /* =========================
+     キャラクターに該当する歴史
+  ========================= */
+
+  const characterHistory =
+    historicalMemory.filter(
+      item => {
+
+        if(!item){
+
+          return false;
+
+        }
+
+
+        /*
+         * characterが指定されていない
+         * 共通イベントも残す
+         */
+
+        if(
+          !item.character ||
+          item.character === "all" ||
+          item.character === "共通"
+        ){
+
+          return true;
+
+        }
+
+
+        /*
+         * JSON側のcharacterは
+         * 日本語名でも英字IDでも使えるようにする
+         */
+
+        const characterNames = {
+
+          manager:[
+            "manager",
+            "ブランク"
+          ],
+
+          aizawa:[
+            "aizawa",
+            "相澤仁美"
+          ],
+
+          ogura:[
+            "ogura",
+            "小倉優香"
+          ],
+
+          harumi:[
+            "harumi",
+            "根本はるみ"
+          ],
+
+          wacchi:[
+            "wacchi",
+            "わちみなみ"
+          ],
+
+          yanase:[
+            "yanase",
+            "柳瀬早紀"
+          ],
+
+          ramu:[
+            "ramu",
+            "RaMu"
+          ],
+
+          rika:[
+            "rika",
+            "泉里香"
+          ],
+
+          io:[
+            "io",
+            "伊織いお"
+          ]
+
+        };
+
+
+        const names =
+          characterNames[character] ||
+          [character];
+
+
+        return names.includes(
+          item.character
+        );
+
+      }
+    );
+
+
+  /* =========================
      Messages
   ========================= */
 
   const messages = [];
 
 
-  /*
-   * 基本プロンプト
-   */
+  /* =========================
+     基本プロンプト
+  ========================= */
 
   if(systemPrompt){
 
@@ -191,14 +303,60 @@ module.exports = function handler(req, res) {
   }
 
 
-  /*
-   * 会話履歴
-   *
-   * 画像は今回のリクエストだけに
-   * 付ける。
-   */
+  /* =========================
+     大志との歴史
+  ========================= */
 
-  for(let i = 0; i < history.length; i++){
+  if(characterHistory.length > 0){
+
+    let historyText =
+      "【大志との過去の出来事】\n\n";
+
+
+    characterHistory.forEach(
+      item => {
+
+        historyText +=
+          `日付: ${item.date || ""}\n`;
+
+
+        historyText +=
+          `出来事: ${item.event || ""}\n`;
+
+
+        historyText +=
+          `内容: ${item.summary || ""}\n\n`;
+
+      }
+    );
+
+
+    historyText +=
+      "これは過去の出来事に関する記録です。" +
+      "現在の会話では、この記録をキャラクターの過去の経験として自然に参照してください。" +
+      "記録にない出来事を、記録にある事実として勝手に作らないでください。";
+
+
+    messages.push({
+
+      role:"system",
+
+      content:historyText
+
+    });
+
+  }
+
+
+  /* =========================
+     会話履歴
+  ========================= */
+
+  for(
+    let i = 0;
+    i < history.length;
+    i++
+  ){
 
     const message =
       history[i];
@@ -292,13 +450,9 @@ module.exports = function handler(req, res) {
   }
 
 
-  /*
-   * 画像だけ送信された場合
-   *
-   * HTML側では画像だけでもsendできるので、
-   * historyにユーザーメッセージが存在しない
-   * ケースを処理する。
-   */
+  /* =========================
+     画像だけ送信された場合
+  ========================= */
 
   if(
     image &&
@@ -343,10 +497,6 @@ module.exports = function handler(req, res) {
 
   const requestBody =
     JSON.stringify({
-
-      /*
-       * 画像認識対応モデル
-       */
 
       model:"deepseek-flash",
 
@@ -394,18 +544,31 @@ module.exports = function handler(req, res) {
   );
 
 
-  /*
-   * デバッグ用
-   */
+  /* =========================
+     デバッグ
+  ========================= */
 
   console.log(
     "Character:",
     character
   );
 
+
   console.log(
     "Image attached:",
     Boolean(image)
+  );
+
+
+  console.log(
+    "Historical memory:",
+    historicalMemory.length
+  );
+
+
+  console.log(
+    "Character history:",
+    characterHistory.length
   );
 
 
