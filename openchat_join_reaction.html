@@ -1,0 +1,4779 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Open Chat</title>
+
+
+<style>
+
+/* =========================================================
+   基本
+========================================================= */
+
+:root{
+
+  --accent:#1976d2;
+  --accent-light:#eaf3ff;
+  --accent-dark:#125ca8;
+
+  --border:#d5e2f0;
+
+  --text:#17212b;
+  --muted:#718096;
+
+  --panel:#ffffff;
+
+  --background:#eef5fb;
+
+  --system:#edf2f7;
+
+  --user:#e7f1ff;
+
+  --danger:#d64545;
+
+}
+
+
+*{
+  box-sizing:border-box;
+}
+
+
+html,
+body{
+
+  margin:0;
+
+  width:100%;
+  height:100%;
+
+  overflow:hidden;
+
+}
+
+
+body{
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+
+  color:var(--text);
+
+  background:var(--background);
+
+}
+
+
+/* =========================================================
+   全体
+========================================================= */
+
+.app{
+
+  display:flex;
+
+  width:100%;
+  height:100%;
+
+}
+
+
+/* =========================================================
+   メイン
+========================================================= */
+
+.main{
+
+  display:flex;
+
+  flex-direction:column;
+
+  min-width:0;
+
+  flex:1;
+
+  height:100%;
+
+  background:#ffffff;
+
+}
+
+
+/* =========================================================
+   ヘッダー
+========================================================= */
+
+.header{
+
+  height:60px;
+
+  flex-shrink:0;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:space-between;
+
+  padding:
+    0
+    20px;
+
+  background:#ffffff;
+
+  border-bottom:
+    1px solid var(--border);
+
+}
+
+
+.room-title{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:10px;
+
+  min-width:0;
+
+}
+
+
+.room-icon{
+
+  width:34px;
+  height:34px;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  border-radius:10px;
+
+  background:var(--accent-light);
+
+  color:var(--accent);
+
+  font-size:18px;
+
+}
+
+
+.room-name{
+
+  font-size:16px;
+
+  font-weight:bold;
+
+  white-space:nowrap;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+
+}
+
+
+.room-status{
+
+  font-size:11px;
+
+  color:var(--muted);
+
+  margin-top:2px;
+
+}
+
+
+.header-right{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:8px;
+
+}
+
+
+.online-count{
+
+  padding:
+    6px
+    10px;
+
+  border-radius:20px;
+
+  background:#f4f8fc;
+
+  color:var(--muted);
+
+  font-size:12px;
+
+}
+
+
+/* =========================================================
+   入室ボタン
+========================================================= */
+
+.header-join{
+
+  height:34px;
+
+  padding:
+    0
+    12px;
+
+  border:none;
+
+  border-radius:8px;
+
+  background:var(--accent);
+
+  color:#ffffff;
+
+  font-size:12px;
+
+  font-weight:bold;
+
+  cursor:pointer;
+
+}
+
+
+.header-join:hover{
+
+  background:var(--accent-dark);
+
+}
+
+
+/* =========================================================
+   スマホ参加者バー
+========================================================= */
+
+.mobile-members{
+
+  display:none;
+
+}
+
+
+/* =========================================================
+   チャット
+========================================================= */
+
+.chat{
+
+  flex:1;
+
+  min-height:0;
+
+  overflow-y:auto;
+
+  padding:
+    22px
+    max(18px, calc((100% - 850px) / 2));
+
+  background:
+    linear-gradient(
+      to bottom,
+      #f8fbff,
+      #ffffff
+    );
+
+}
+
+
+/* =========================================================
+   メッセージ
+========================================================= */
+
+.message-row{
+
+  display:flex;
+
+  gap:10px;
+
+  margin-bottom:15px;
+
+  max-width:850px;
+
+}
+
+
+.message-row.mine{
+
+  flex-direction:row-reverse;
+
+  margin-left:auto;
+
+}
+
+
+.avatar{
+
+  width:38px;
+  height:38px;
+
+  flex-shrink:0;
+
+  border-radius:50%;
+
+  overflow:hidden;
+
+  background:#eaf3ff;
+
+  border:
+    1px solid var(--border);
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  color:var(--accent);
+
+  font-size:15px;
+
+  font-weight:bold;
+
+}
+
+
+.avatar img{
+
+  width:100%;
+  height:100%;
+
+  object-fit:cover;
+
+}
+
+
+.message-column{
+
+  min-width:0;
+
+  max-width:
+    calc(100% - 48px);
+
+}
+
+
+.message-name-line{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:7px;
+
+  margin-bottom:3px;
+
+}
+
+
+.message-row.mine
+.message-name-line{
+
+  justify-content:flex-end;
+
+}
+
+
+.message-name{
+
+  font-size:12px;
+
+  font-weight:bold;
+
+  color:#4a5568;
+
+}
+
+
+.message-time{
+
+  font-size:10px;
+
+  color:#a0aec0;
+
+}
+
+
+.bubble{
+
+  display:inline-block;
+
+  max-width:100%;
+
+  padding:
+    10px
+    13px;
+
+  border-radius:13px;
+
+  background:#ffffff;
+
+  border:
+    1px solid var(--border);
+
+  line-height:1.7;
+
+  font-size:14px;
+
+  white-space:pre-wrap;
+
+  word-break:break-word;
+
+}
+
+
+.message-row.mine
+.bubble{
+
+  background:var(--user);
+
+  border-color:#c5dcf6;
+
+}
+
+
+/* =========================================================
+   タイピング
+========================================================= */
+
+.typing{
+
+  display:inline-flex;
+
+  align-items:center;
+
+  gap:5px;
+
+  padding:
+    10px
+    14px;
+
+  background:#ffffff;
+
+  border:
+    1px solid var(--border);
+
+  border-radius:13px;
+
+}
+
+
+.typing-dot{
+
+  width:5px;
+  height:5px;
+
+  border-radius:50%;
+
+  background:#9bb5d0;
+
+  animation:
+    typing 1.2s infinite ease-in-out;
+
+}
+
+
+.typing-dot:nth-child(2){
+
+  animation-delay:0.15s;
+
+}
+
+
+.typing-dot:nth-child(3){
+
+  animation-delay:0.3s;
+
+}
+
+
+@keyframes typing{
+
+  0%,
+  60%,
+  100%{
+
+    transform:translateY(0);
+
+    opacity:0.4;
+
+  }
+
+  30%{
+
+    transform:translateY(-3px);
+
+    opacity:1;
+
+  }
+
+}
+
+
+/* =========================================================
+   システム
+========================================================= */
+
+.system-message{
+
+  display:flex;
+
+  justify-content:center;
+
+  margin:
+    10px
+    0
+    16px;
+
+}
+
+
+.system-message span{
+
+  padding:
+    5px
+    10px;
+
+  border-radius:20px;
+
+  background:var(--system);
+
+  color:#718096;
+
+  font-size:11px;
+
+}
+
+
+/* =========================================================
+   入力
+========================================================= */
+
+.input-area{
+
+  flex-shrink:0;
+
+  border-top:
+    1px solid var(--border);
+
+  background:#ffffff;
+
+  padding:
+    10px
+    14px;
+
+}
+
+
+.current-speaker{
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:space-between;
+
+  margin-bottom:7px;
+
+}
+
+
+.current-speaker-label{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:7px;
+
+  min-width:0;
+
+}
+
+
+.current-speaker-dot{
+
+  width:7px;
+  height:7px;
+
+  flex-shrink:0;
+
+  border-radius:50%;
+
+  background:#35a854;
+
+}
+
+
+.current-speaker-name{
+
+  font-size:12px;
+
+  font-weight:bold;
+
+  white-space:nowrap;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+
+}
+
+
+.switch-hint{
+
+  color:#9aa7b5;
+
+  font-size:10px;
+
+}
+
+
+.input-row{
+
+  display:flex;
+
+  align-items:flex-end;
+
+  gap:8px;
+
+}
+
+
+#messageInput{
+
+  flex:1;
+
+  min-width:0;
+
+  height:52px;
+
+  resize:none;
+
+  padding:
+    10px
+    12px;
+
+  border:
+    1px solid var(--border);
+
+  border-radius:10px;
+
+  outline:none;
+
+  font-size:15px;
+
+  line-height:1.5;
+
+  color:var(--text);
+
+  background:#ffffff;
+
+}
+
+
+#messageInput:focus{
+
+  border-color:var(--accent);
+
+}
+
+
+#sendBtn{
+
+  width:74px;
+
+  height:52px;
+
+  flex-shrink:0;
+
+  border:none;
+
+  border-radius:10px;
+
+  background:var(--accent);
+
+  color:#ffffff;
+
+  font-size:14px;
+
+  cursor:pointer;
+
+}
+
+
+#sendBtn:hover{
+
+  background:var(--accent-dark);
+
+}
+
+
+#sendBtn:disabled{
+
+  opacity:0.5;
+
+  cursor:default;
+
+}
+
+
+/* =========================================================
+   サイドバー
+========================================================= */
+
+.sidebar{
+
+  width:270px;
+
+  flex-shrink:0;
+
+  display:flex;
+
+  flex-direction:column;
+
+  background:#ffffff;
+
+  border-left:
+    1px solid var(--border);
+
+}
+
+
+.sidebar-header{
+
+  height:60px;
+
+  flex-shrink:0;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:space-between;
+
+  padding:
+    0
+    16px;
+
+  border-bottom:
+    1px solid var(--border);
+
+}
+
+
+.sidebar-title{
+
+  font-size:14px;
+
+  font-weight:bold;
+
+}
+
+
+.sidebar-subtitle{
+
+  font-size:10px;
+
+  color:var(--muted);
+
+}
+
+
+.members{
+
+  flex:1;
+
+  overflow-y:auto;
+
+  padding:10px;
+
+}
+
+
+.member-section-title{
+
+  margin:
+    7px
+    7px
+    5px;
+
+  font-size:10px;
+
+  color:#9aa7b5;
+
+  font-weight:bold;
+
+}
+
+
+.member{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:9px;
+
+  width:100%;
+
+  padding:8px;
+
+  margin-bottom:2px;
+
+  border-radius:9px;
+
+  border:
+    1px solid transparent;
+
+  cursor:pointer;
+
+  text-align:left;
+
+  background:transparent;
+
+}
+
+
+.member:hover{
+
+  background:#f7fbff;
+
+}
+
+
+.member.active{
+
+  background:var(--accent-light);
+
+  border-color:#cfe1f5;
+
+}
+
+
+.member-avatar{
+
+  position:relative;
+
+  width:34px;
+  height:34px;
+
+  flex-shrink:0;
+
+  border-radius:50%;
+
+  overflow:hidden;
+
+  background:#eaf3ff;
+
+  border:
+    1px solid var(--border);
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  color:var(--accent);
+
+  font-size:13px;
+
+  font-weight:bold;
+
+}
+
+
+.member-avatar img{
+
+  width:100%;
+  height:100%;
+
+  object-fit:cover;
+
+}
+
+
+.online-dot{
+
+  position:absolute;
+
+  right:0;
+  bottom:0;
+
+  width:9px;
+  height:9px;
+
+  border-radius:50%;
+
+  background:#35a854;
+
+  border:
+    2px solid #ffffff;
+
+}
+
+
+.member-info{
+
+  min-width:0;
+
+  flex:1;
+
+}
+
+
+.member-name{
+
+  font-size:13px;
+
+  font-weight:bold;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+
+  white-space:nowrap;
+
+}
+
+
+.member-type{
+
+  margin-top:2px;
+
+  font-size:10px;
+
+  color:var(--muted);
+
+}
+
+
+.sidebar-footer{
+
+  flex-shrink:0;
+
+  padding:10px;
+
+  border-top:
+    1px solid var(--border);
+
+}
+
+
+.sidebar-join{
+
+  width:100%;
+
+  height:40px;
+
+  border:none;
+
+  border-radius:9px;
+
+  background:var(--accent);
+
+  color:#ffffff;
+
+  font-size:13px;
+
+  font-weight:bold;
+
+  cursor:pointer;
+
+}
+
+
+.sidebar-join:hover{
+
+  background:var(--accent-dark);
+
+}
+
+
+.leave-action{
+
+  display:none;
+
+  width:100%;
+
+  height:38px;
+
+  margin-top:7px;
+
+  border:
+    1px solid #f0caca;
+
+  border-radius:9px;
+
+  background:#fff7f7;
+
+  color:var(--danger);
+
+  font-size:12px;
+
+  cursor:pointer;
+
+}
+
+
+.leave-action.show{
+
+  display:block;
+
+}
+
+
+/* =========================================================
+   空画面
+========================================================= */
+
+.empty-chat{
+
+  height:100%;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  text-align:center;
+
+  color:#9aa7b5;
+
+}
+
+
+.empty-inner{
+
+  padding:30px;
+
+}
+
+
+.empty-icon{
+
+  font-size:35px;
+
+  margin-bottom:12px;
+
+  opacity:0.7;
+
+}
+
+
+.empty-title{
+
+  font-size:15px;
+
+  font-weight:bold;
+
+  color:#718096;
+
+}
+
+
+.empty-text{
+
+  margin-top:6px;
+
+  font-size:12px;
+
+  line-height:1.7;
+
+}
+
+
+/* =========================================================
+   入室オーバーレイ
+========================================================= */
+
+.overlay{
+
+  position:fixed;
+
+  inset:0;
+
+  display:none;
+
+  align-items:center;
+
+  justify-content:center;
+
+  padding:20px;
+
+  background:
+    rgba(20,35,50,0.35);
+
+  z-index:100;
+
+}
+
+
+.overlay.show{
+
+  display:flex;
+
+}
+
+
+.join-panel{
+
+  width:
+    min(460px, 100%);
+
+  max-height:90vh;
+
+  overflow-y:auto;
+
+  background:#ffffff;
+
+  border-radius:15px;
+
+  box-shadow:
+    0
+    20px
+    60px
+    rgba(0,0,0,0.18);
+
+}
+
+
+.join-header{
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:space-between;
+
+  padding:
+    17px
+    18px;
+
+  border-bottom:
+    1px solid var(--border);
+
+}
+
+
+.join-title{
+
+  font-size:16px;
+
+  font-weight:bold;
+
+}
+
+
+.close-btn{
+
+  width:32px;
+  height:32px;
+
+  border:none;
+
+  border-radius:8px;
+
+  background:#f5f7fa;
+
+  color:#718096;
+
+  font-size:18px;
+
+  cursor:pointer;
+
+}
+
+
+.join-body{
+
+  padding:18px;
+
+}
+
+
+.form-group{
+
+  margin-bottom:15px;
+
+}
+
+
+.form-label{
+
+  display:block;
+
+  margin-bottom:6px;
+
+  font-size:12px;
+
+  font-weight:bold;
+
+  color:#4a5568;
+
+}
+
+
+/* =========================================================
+   参加タイプ
+========================================================= */
+
+.radio-row{
+
+  display:flex;
+
+  gap:8px;
+
+}
+
+
+.radio-option{
+
+  flex:1;
+
+}
+
+
+.radio-option input{
+
+  display:none;
+
+}
+
+
+.radio-option label{
+
+  display:block;
+
+  padding:10px;
+
+  text-align:center;
+
+  border:
+    1px solid var(--border);
+
+  border-radius:9px;
+
+  background:#ffffff;
+
+  color:#4a5568;
+
+  font-size:12px;
+
+  cursor:pointer;
+
+}
+
+
+.radio-option input:checked + label{
+
+  border-color:var(--accent);
+
+  background:var(--accent-light);
+
+  color:var(--accent);
+
+  font-weight:bold;
+
+}
+
+
+/* =========================================================
+   フォーム
+========================================================= */
+
+select,
+.text-input{
+
+  width:100%;
+
+  height:42px;
+
+  padding:
+    0
+    11px;
+
+  border:
+    1px solid var(--border);
+
+  border-radius:9px;
+
+  outline:none;
+
+  background:#ffffff;
+
+  color:var(--text);
+
+  font-size:14px;
+
+}
+
+
+select:focus,
+.text-input:focus{
+
+  border-color:var(--accent);
+
+}
+
+
+.name-preview{
+
+  margin-top:6px;
+
+  font-size:10px;
+
+  color:#9aa7b5;
+
+}
+
+
+/* =========================================================
+   説明
+========================================================= */
+
+.join-note{
+
+  padding:
+    9px
+    11px;
+
+  border-radius:8px;
+
+  background:#f7fafc;
+
+  color:#718096;
+
+  font-size:11px;
+
+  line-height:1.6;
+
+}
+
+
+/* =========================================================
+   ボタン
+========================================================= */
+
+.join-actions{
+
+  display:flex;
+
+  gap:8px;
+
+  margin-top:17px;
+
+}
+
+
+.join-action{
+
+  flex:1;
+
+  height:42px;
+
+  border:none;
+
+  border-radius:9px;
+
+  font-size:13px;
+
+  font-weight:bold;
+
+  cursor:pointer;
+
+}
+
+
+.cancel-action{
+
+  background:#f1f4f7;
+
+  color:#5d6b78;
+
+}
+
+
+.join-action-primary{
+
+  background:var(--accent);
+
+  color:#ffffff;
+
+}
+
+
+/* =========================================================
+   スマホ
+========================================================= */
+
+@media (max-width:700px){
+
+  .header{
+
+    height:54px;
+
+    padding:
+      0
+      10px;
+
+  }
+
+
+  .room-icon{
+
+    width:30px;
+    height:30px;
+
+  }
+
+
+  .room-name{
+
+    font-size:14px;
+
+  }
+
+
+  .room-status{
+
+    display:none;
+
+  }
+
+
+  .header-right{
+
+    gap:5px;
+
+  }
+
+
+  .online-count{
+
+    font-size:10px;
+
+    padding:
+      5px
+      8px;
+
+  }
+
+
+  .header-join{
+
+    height:32px;
+
+    padding:
+      0
+      10px;
+
+    font-size:11px;
+
+  }
+
+
+  .mobile-members{
+
+    display:flex;
+
+    height:54px;
+
+    flex-shrink:0;
+
+    align-items:center;
+
+    gap:7px;
+
+    padding:
+      7px
+      9px;
+
+    overflow-x:auto;
+
+    background:#ffffff;
+
+    border-bottom:
+      1px solid var(--border);
+
+  }
+
+
+  .mobile-member{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:5px;
+
+    flex-shrink:0;
+
+    padding:
+      5px
+      8px
+      5px
+      5px;
+
+    border:
+      1px solid var(--border);
+
+    border-radius:20px;
+
+    background:#ffffff;
+
+    cursor:pointer;
+
+  }
+
+
+  .mobile-member.active{
+
+    background:var(--accent-light);
+
+    border-color:#c5dcf6;
+
+  }
+
+
+  .mobile-member-avatar{
+
+    position:relative;
+
+    width:25px;
+    height:25px;
+
+    border-radius:50%;
+
+    overflow:hidden;
+
+    background:#eaf3ff;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    color:var(--accent);
+
+    font-size:10px;
+
+    font-weight:bold;
+
+  }
+
+
+  .mobile-member-avatar img{
+
+    width:100%;
+    height:100%;
+
+    object-fit:cover;
+
+  }
+
+
+  .mobile-member-name{
+
+    max-width:100px;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    white-space:nowrap;
+
+    font-size:11px;
+
+  }
+
+
+  .sidebar{
+
+    display:none;
+
+  }
+
+
+  .chat{
+
+    padding:
+      15px
+      10px;
+
+  }
+
+
+  .message-row{
+
+    gap:7px;
+
+    margin-bottom:12px;
+
+  }
+
+
+  .avatar{
+
+    width:31px;
+    height:31px;
+
+    font-size:12px;
+
+  }
+
+
+  .message-column{
+
+    max-width:
+      calc(100% - 40px);
+
+  }
+
+
+  .bubble{
+
+    font-size:14px;
+
+    padding:
+      9px
+      11px;
+
+  }
+
+
+  .message-name{
+
+    font-size:11px;
+
+  }
+
+
+  .input-area{
+
+    padding:8px;
+
+  }
+
+
+  .switch-hint{
+
+    display:none;
+
+  }
+
+
+  #messageInput{
+
+    height:48px;
+
+    font-size:15px;
+
+  }
+
+
+  #sendBtn{
+
+    width:62px;
+
+    height:48px;
+
+  }
+
+}
+
+
+/* =========================================================
+   小さいスマホ
+========================================================= */
+
+@media (max-width:400px){
+
+  .room-icon{
+
+    display:none;
+
+  }
+
+
+  .room-name{
+
+    max-width:100px;
+
+  }
+
+
+  .online-count{
+
+    display:none;
+
+  }
+
+
+  .header-join{
+
+    padding:
+      0
+      9px;
+
+  }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="app">
+
+
+  <!-- =====================================================
+       メイン
+  ====================================================== -->
+
+  <main class="main">
+
+
+    <!-- =================================================
+         ヘッダー
+    ================================================== -->
+
+    <header class="header">
+
+
+      <div class="room-title">
+
+
+        <div class="room-icon">
+
+          💬
+
+        </div>
+
+
+        <div>
+
+
+          <div
+            id="roomName"
+            class="room-name">
+
+            オープンチャット
+
+          </div>
+
+
+          <div class="room-status">
+
+            AIキャラクターと自由に会話できます
+
+          </div>
+
+
+        </div>
+
+
+      </div>
+
+
+      <div class="header-right">
+
+
+        <div
+          id="onlineCount"
+          class="online-count">
+
+          0人
+
+        </div>
+
+
+        <!-- ★ スマホでも常に表示 -->
+
+        <button
+          id="headerJoinBtn"
+          class="header-join"
+          type="button">
+
+          ＋ 入室
+
+        </button>
+
+
+      </div>
+
+
+    </header>
+
+
+    <!-- =================================================
+         スマホ参加者
+    ================================================== -->
+
+    <div
+      id="mobileMembers"
+      class="mobile-members">
+    </div>
+
+
+    <!-- =================================================
+         チャット
+    ================================================== -->
+
+    <section
+      id="chat"
+      class="chat">
+
+
+      <div
+        id="emptyChat"
+        class="empty-chat">
+
+
+        <div class="empty-inner">
+
+
+          <div class="empty-icon">
+
+            💬
+
+          </div>
+
+
+          <div class="empty-title">
+
+            まだ誰も入室していません
+
+          </div>
+
+
+          <div class="empty-text">
+
+            「＋ 入室」から参加者を追加してください。
+
+          </div>
+
+
+        </div>
+
+
+      </div>
+
+
+    </section>
+
+
+    <!-- =================================================
+         入力
+    ================================================== -->
+
+    <section class="input-area">
+
+
+      <div class="current-speaker">
+
+
+        <div class="current-speaker-label">
+
+
+          <span
+            class="current-speaker-dot">
+          </span>
+
+
+          <span
+            id="currentSpeakerName"
+            class="current-speaker-name">
+
+            まず入室してください
+
+          </span>
+
+
+        </div>
+
+
+        <div class="switch-hint">
+
+          参加者一覧から発言者を切替
+
+        </div>
+
+
+      </div>
+
+
+      <div class="input-row">
+
+
+        <textarea
+          id="messageInput"
+          placeholder="入室すると発言できます"
+          disabled></textarea>
+
+
+        <button
+          id="sendBtn"
+          type="button"
+          disabled>
+
+          送信
+
+        </button>
+
+
+      </div>
+
+
+    </section>
+
+
+  </main>
+
+
+  <!-- =====================================================
+       PCサイドバー
+  ====================================================== -->
+
+  <aside class="sidebar">
+
+
+    <div class="sidebar-header">
+
+
+      <div>
+
+
+        <div class="sidebar-title">
+
+          参加者
+
+        </div>
+
+
+        <div class="sidebar-subtitle">
+
+          オンラインメンバー
+
+        </div>
+
+
+      </div>
+
+
+    </div>
+
+
+    <div
+      id="members"
+      class="members">
+    </div>
+
+
+    <div class="sidebar-footer">
+
+
+      <button
+        id="sidebarJoinBtn"
+        class="sidebar-join"
+        type="button">
+
+        ＋ 入室する
+
+      </button>
+
+
+      <button
+        id="leaveBtn"
+        class="leave-action"
+        type="button">
+
+        退室する
+
+      </button>
+
+
+    </div>
+
+
+  </aside>
+
+
+</div>
+
+
+<!-- =========================================================
+     入室画面
+========================================================= -->
+
+<div
+  id="overlay"
+  class="overlay">
+
+
+  <div class="join-panel">
+
+
+    <div class="join-header">
+
+
+      <div class="join-title">
+
+        オープンチャットに入室
+
+      </div>
+
+
+      <button
+        id="closeJoinBtn"
+        class="close-btn"
+        type="button">
+
+        ×
+
+      </button>
+
+
+    </div>
+
+
+    <div class="join-body">
+
+
+      <!-- =================================================
+           参加タイプ
+      ================================================== -->
+
+      <div class="form-group">
+
+
+        <label class="form-label">
+
+          参加タイプ
+
+        </label>
+
+
+        <div class="radio-row">
+
+
+          <div class="radio-option">
+
+
+            <input
+              id="typeUser"
+              type="radio"
+              name="participantType"
+              value="user"
+              checked>
+
+
+            <label for="typeUser">
+
+              自分で発言
+
+            </label>
+
+
+          </div>
+
+
+          <div class="radio-option">
+
+
+            <input
+              id="typeAI"
+              type="radio"
+              name="participantType"
+              value="ai">
+
+
+            <label for="typeAI">
+
+              AIキャラクター
+
+            </label>
+
+
+          </div>
+
+
+        </div>
+
+
+      </div>
+
+
+      <!-- =================================================
+           キャラクター
+      ================================================== -->
+
+      <div class="form-group">
+
+
+        <label
+          for="characterSelect"
+          class="form-label">
+
+          キャラクター
+
+        </label>
+
+
+        <select id="characterSelect">
+
+
+          <!-- ★ 明示的に神田大志 -->
+
+          <option value="blank">
+
+            神田大志
+
+          </option>
+
+
+          <option value="aizawa">
+
+            キャラクターA
+
+          </option>
+
+
+          <option value="ogura">
+
+            キャラクターB
+
+          </option>
+
+
+          <option value="harumi">
+
+            キャラクターC
+
+          </option>
+
+
+          <option value="wacchi">
+
+            キャラクターD
+
+          </option>
+
+
+          <option value="yanase">
+
+            キャラクターE
+
+          </option>
+
+
+          <option value="ramu">
+
+            キャラクターF
+
+          </option>
+
+
+          <option value="rika">
+
+            キャラクターG
+
+          </option>
+
+
+          <option value="io">
+
+            キャラクターH
+
+          </option>
+
+
+        </select>
+
+
+      </div>
+
+
+      <!-- =================================================
+           表示名
+      ================================================== -->
+
+      <div class="form-group">
+
+
+        <label
+          for="displayName"
+          class="form-label">
+
+          チャット上の表示名
+
+        </label>
+
+
+        <input
+          id="displayName"
+          class="text-input"
+          type="text"
+          maxlength="40"
+          value="神田大志"
+          placeholder="表示名">
+
+
+        <div class="name-preview">
+
+          例：
+          「キャラクターA（赤）」
+          「キャラクターA（初心者）」
+          のように同じキャラクターを区別できます。
+
+        </div>
+
+
+      </div>
+
+
+      <!-- =================================================
+           説明
+      ================================================== -->
+
+      <div class="join-note">
+
+        <b>自分で発言</b>を選ぶと、
+        あなたがその参加者として発言します。
+
+        <br><br>
+
+        <b>AIキャラクター</b>を選ぶと、
+        対応する <b>.txt</b> のキャラクター設定を読み込み、
+        ルーム内で自動的に返信します。
+
+        <br><br>
+
+        <b>history.json</b> はキャラクターごとに
+        関係する出来事だけを抽出して利用します。
+
+      </div>
+
+
+      <!-- =================================================
+           ボタン
+      ================================================== -->
+
+      <div class="join-actions">
+
+
+        <button
+          id="cancelJoinBtn"
+          class="join-action cancel-action"
+          type="button">
+
+          キャンセル
+
+        </button>
+
+
+        <button
+          id="joinBtn"
+          class="join-action join-action-primary"
+          type="button">
+
+          入室
+
+        </button>
+
+
+      </div>
+
+
+    </div>
+
+
+  </div>
+
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   キャラクター名
+========================================================= */
+
+const CHARACTER_NAMES = {
+
+  /*
+   * blank は特別扱い。
+   * 「神田大志」として自分で参加する。
+   */
+
+  blank:
+    "神田大志",
+
+
+  /*
+   * ここは現在の index.html と
+   * 同じ名前に戻して使う。
+   */
+
+  aizawa:
+    "キャラクターA",
+
+  ogura:
+    "キャラクターB",
+
+  harumi:
+    "キャラクターC",
+
+  wacchi:
+    "キャラクターD",
+
+  yanase:
+    "キャラクターE",
+
+  ramu:
+    "キャラクターF",
+
+  rika:
+    "キャラクターG",
+
+  io:
+    "キャラクターH"
+
+};
+
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const chat =
+  document.getElementById(
+    "chat"
+  );
+
+
+const emptyChat =
+  document.getElementById(
+    "emptyChat"
+  );
+
+
+const members =
+  document.getElementById(
+    "members"
+  );
+
+
+const mobileMembers =
+  document.getElementById(
+    "mobileMembers"
+  );
+
+
+const onlineCount =
+  document.getElementById(
+    "onlineCount"
+  );
+
+
+const currentSpeakerName =
+  document.getElementById(
+    "currentSpeakerName"
+  );
+
+
+const messageInput =
+  document.getElementById(
+    "messageInput"
+  );
+
+
+const sendBtn =
+  document.getElementById(
+    "sendBtn"
+  );
+
+
+const headerJoinBtn =
+  document.getElementById(
+    "headerJoinBtn"
+  );
+
+
+const sidebarJoinBtn =
+  document.getElementById(
+    "sidebarJoinBtn"
+  );
+
+
+const leaveBtn =
+  document.getElementById(
+    "leaveBtn"
+  );
+
+
+const overlay =
+  document.getElementById(
+    "overlay"
+  );
+
+
+const closeJoinBtn =
+  document.getElementById(
+    "closeJoinBtn"
+  );
+
+
+const cancelJoinBtn =
+  document.getElementById(
+    "cancelJoinBtn"
+  );
+
+
+const joinBtn =
+  document.getElementById(
+    "joinBtn"
+  );
+
+
+const characterSelect =
+  document.getElementById(
+    "characterSelect"
+  );
+
+
+const displayName =
+  document.getElementById(
+    "displayName"
+  );
+
+
+const typeUser =
+  document.getElementById(
+    "typeUser"
+  );
+
+
+const typeAI =
+  document.getElementById(
+    "typeAI"
+  );
+
+
+/* =========================================================
+   状態
+========================================================= */
+
+let participants = [];
+
+let activeParticipantId = null;
+
+let roomMessages = [];
+
+let historicalMemory = [];
+
+let aiBusy = false;
+
+
+/* =========================================================
+   初期化
+========================================================= */
+
+async function initialize(){
+
+  await loadHistoricalMemory();
+
+  updateMembers();
+
+  updateInputState();
+
+}
+
+
+/* =========================================================
+   history.json
+========================================================= */
+
+async function loadHistoricalMemory(){
+
+  try{
+
+    const response =
+      await fetch(
+        "history.json"
+      );
+
+
+    if(!response.ok){
+
+      console.warn(
+        "history.json load error:",
+        response.status
+      );
+
+      historicalMemory = [];
+
+      return;
+
+    }
+
+
+    const data =
+      await response.json();
+
+
+    if(!Array.isArray(data)){
+
+      throw new Error(
+        "history.json は配列である必要があります。"
+      );
+
+    }
+
+
+    historicalMemory =
+      data;
+
+
+  }catch(error){
+
+    console.error(
+      "HISTORY LOAD ERROR:",
+      error
+    );
+
+    historicalMemory = [];
+
+  }
+
+}
+
+
+/* =========================================================
+   キャラクター名
+========================================================= */
+
+function getCharacterName(
+  character
+){
+
+  return (
+    CHARACTER_NAMES[character] ||
+    character
+  );
+
+}
+
+
+/* =========================================================
+   プロンプト読み込み
+========================================================= */
+
+async function loadPrompt(
+  character
+){
+
+  if(
+    !character ||
+    character === "blank"
+  ){
+
+    return "";
+
+  }
+
+
+  try{
+
+    const response =
+      await fetch(
+        `${character}.txt`
+      );
+
+
+    if(!response.ok){
+
+      console.warn(
+        `PROMPT LOAD ERROR: ${character}.txt`
+      );
+
+      return "";
+
+    }
+
+
+    return await response.text();
+
+
+  }catch(error){
+
+    console.error(
+      "PROMPT ERROR:",
+      error
+    );
+
+    return "";
+
+  }
+
+}
+
+
+/* =========================================================
+   入室画面
+========================================================= */
+
+function openJoinPanel(){
+
+  overlay.classList.add(
+    "show"
+  );
+
+
+  updateNameFromCharacter();
+
+
+  setTimeout(
+    () => {
+
+      displayName.focus();
+
+      displayName.select();
+
+    },
+    50
+  );
+
+}
+
+
+function closeJoinPanel(){
+
+  overlay.classList.remove(
+    "show"
+  );
+
+}
+
+
+headerJoinBtn.addEventListener(
+  "click",
+  openJoinPanel
+);
+
+
+sidebarJoinBtn.addEventListener(
+  "click",
+  openJoinPanel
+);
+
+
+closeJoinBtn.addEventListener(
+  "click",
+  closeJoinPanel
+);
+
+
+cancelJoinBtn.addEventListener(
+  "click",
+  closeJoinPanel
+);
+
+
+overlay.addEventListener(
+  "click",
+  event => {
+
+    if(
+      event.target === overlay
+    ){
+
+      closeJoinPanel();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   名前自動設定
+========================================================= */
+
+function updateNameFromCharacter(){
+
+  const name =
+    getCharacterName(
+      characterSelect.value
+    );
+
+
+  if(
+    displayName.dataset.manual !==
+    "true"
+  ){
+
+    displayName.value =
+      name;
+
+  }
+
+}
+
+
+characterSelect.addEventListener(
+  "change",
+  () => {
+
+    displayName.dataset.manual =
+      "false";
+
+    updateNameFromCharacter();
+
+  }
+);
+
+
+displayName.addEventListener(
+  "input",
+  () => {
+
+    displayName.dataset.manual =
+      "true";
+
+  }
+);
+
+
+/* =========================================================
+   タイプ変更
+========================================================= */
+
+typeUser.addEventListener(
+  "change",
+  () => {
+
+    if(typeUser.checked){
+
+      /*
+       * 自分で発言する場合、
+       * 神田大志を初期値にする。
+       */
+
+      if(
+        characterSelect.value ===
+        "blank"
+      ){
+
+        displayName.value =
+          "神田大志";
+
+        displayName.dataset.manual =
+          "false";
+
+      }
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   入室
+========================================================= */
+
+joinBtn.addEventListener(
+  "click",
+  joinParticipant
+);
+
+
+async function joinParticipant(){
+
+  const type =
+    typeAI.checked
+      ? "ai"
+      : "user";
+
+
+  const character =
+    characterSelect.value;
+
+
+  let name =
+    displayName.value.trim();
+
+
+  if(!name){
+
+    name =
+      getCharacterName(
+        character
+      );
+
+  }
+
+
+  /*
+   * 同じ表示名は禁止。
+   */
+
+  if(
+    participants.some(
+      participant =>
+        participant.displayName ===
+        name
+    )
+  ){
+
+    alert(
+      "その表示名はすでに入室しています。\n別の名前にしてください。"
+    );
+
+    return;
+
+  }
+
+
+  let prompt = "";
+
+
+  /*
+   * AIなら.txtを読む
+   */
+
+  if(type === "ai"){
+
+    if(
+      character === "blank"
+    ){
+
+      alert(
+        "AIキャラクターを選択してください。"
+      );
+
+      return;
+
+    }
+
+
+    joinBtn.disabled =
+      true;
+
+    joinBtn.textContent =
+      "読み込み中…";
+
+
+    prompt =
+      await loadPrompt(
+        character
+      );
+
+
+    joinBtn.disabled =
+      false;
+
+    joinBtn.textContent =
+      "入室";
+
+
+    if(!prompt){
+
+      const proceed =
+        confirm(
+          `${character}.txt を読み込めませんでした。\n\nこのまま入室しますか？`
+        );
+
+
+      if(!proceed){
+
+        return;
+
+      }
+
+    }
+
+  }
+
+
+  const participant = {
+
+    id:
+      createId(),
+
+    type:
+      type,
+
+    character:
+      character,
+
+    displayName:
+      name,
+
+    prompt:
+      prompt,
+
+    joinedAt:
+      Date.now()
+
+  };
+
+
+  participants.push(
+    participant
+  );
+
+
+  /*
+   * 自分で発言する参加者なら
+   * 即座にその人を発言者にする。
+   */
+
+  if(type === "user"){
+
+    activeParticipantId =
+      participant.id;
+
+  }
+
+
+  closeJoinPanel();
+
+
+  addSystemMessage(
+    `${name} が入室しました。`
+  );
+
+
+  /*
+   * 入室をAIが認識できるよう、
+   * ルーム内部にもイベントとして記録する。
+   */
+
+  roomMessages.push({
+
+    type:
+      "event",
+
+    event:
+      "join",
+
+    participantId:
+      participant.id,
+
+    participantType:
+      participant.type,
+
+    character:
+      participant.character,
+
+    name:
+      participant.displayName,
+
+    text:
+      `${name}が入室しました。`,
+
+    time:
+      Date.now()
+
+  });
+
+
+  roomMessages =
+    roomMessages.slice(-60);
+
+
+  /*
+   * 人間が入室したときだけ、
+   * AIをランダムに最大2人反応させる。
+   *
+   * AIキャラクターの入室には
+   * 自動反応させない。
+   */
+
+  if(type === "user"){
+
+    await askAllAI();
+
+  }
+
+
+  updateMembers();
+
+  updateInputState();
+
+}
+
+
+/* =========================================================
+   ID
+========================================================= */
+
+function createId(){
+
+  if(
+    window.crypto &&
+    crypto.randomUUID
+  ){
+
+    return crypto.randomUUID();
+
+  }
+
+
+  return (
+    Date.now().toString(36) +
+    Math.random()
+      .toString(36)
+      .slice(2)
+  );
+
+}
+
+
+/* =========================================================
+   退室
+========================================================= */
+
+leaveBtn.addEventListener(
+  "click",
+  leaveActiveParticipant
+);
+
+
+function leaveActiveParticipant(){
+
+  if(!activeParticipantId){
+
+    return;
+
+  }
+
+
+  const participant =
+    participants.find(
+      item =>
+        item.id ===
+        activeParticipantId
+    );
+
+
+  if(!participant){
+
+    return;
+
+  }
+
+
+  const name =
+    participant.displayName;
+
+
+  participants =
+    participants.filter(
+      item =>
+        item.id !==
+        activeParticipantId
+    );
+
+
+  activeParticipantId =
+    null;
+
+
+  /*
+   * 他に自分で発言する参加者が
+   * いれば、その人を選択。
+   */
+
+  const anotherUser =
+    participants.find(
+      item =>
+        item.type === "user"
+    );
+
+
+  if(anotherUser){
+
+    activeParticipantId =
+      anotherUser.id;
+
+  }
+
+
+  addSystemMessage(
+    `${name} が退室しました。`
+  );
+
+
+  updateMembers();
+
+  updateInputState();
+
+}
+
+
+/* =========================================================
+   参加者選択
+========================================================= */
+
+function selectParticipant(
+  id
+){
+
+  const participant =
+    participants.find(
+      item =>
+        item.id === id
+    );
+
+
+  if(!participant){
+
+    return;
+
+  }
+
+
+  /*
+   * AIは自分の発言者にはできない。
+   */
+
+  if(
+    participant.type === "ai"
+  ){
+
+    return;
+
+  }
+
+
+  activeParticipantId =
+    id;
+
+
+  updateMembers();
+
+  updateInputState();
+
+}
+
+
+/* =========================================================
+   参加者一覧
+========================================================= */
+
+function updateMembers(){
+
+  members.innerHTML =
+    "";
+
+  mobileMembers.innerHTML =
+    "";
+
+
+  const users =
+    participants.filter(
+      item =>
+        item.type === "user"
+    );
+
+
+  const ais =
+    participants.filter(
+      item =>
+        item.type === "ai"
+    );
+
+
+  /*
+   * PC
+   */
+
+  if(users.length){
+
+    const title =
+      document.createElement(
+        "div"
+      );
+
+    title.className =
+      "member-section-title";
+
+    title.textContent =
+      "自分";
+
+    members.appendChild(
+      title
+    );
+
+
+    users.forEach(
+      participant => {
+
+        members.appendChild(
+          createMemberElement(
+            participant
+          )
+        );
+
+      }
+    );
+
+  }
+
+
+  if(ais.length){
+
+    const title =
+      document.createElement(
+        "div"
+      );
+
+    title.className =
+      "member-section-title";
+
+    title.textContent =
+      "AIキャラクター";
+
+    members.appendChild(
+      title
+    );
+
+
+    ais.forEach(
+      participant => {
+
+        members.appendChild(
+          createMemberElement(
+            participant
+          )
+        );
+
+      }
+    );
+
+  }
+
+
+  /*
+   * スマホ
+   */
+
+  participants.forEach(
+    participant => {
+
+      mobileMembers.appendChild(
+        createMobileMemberElement(
+          participant
+        )
+      );
+
+    }
+  );
+
+
+  onlineCount.textContent =
+    `${participants.length}人`;
+
+
+  if(activeParticipantId){
+
+    leaveBtn.classList.add(
+      "show"
+    );
+
+  }else{
+
+    leaveBtn.classList.remove(
+      "show"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   PC参加者
+========================================================= */
+
+function createMemberElement(
+  participant
+){
+
+  const button =
+    document.createElement(
+      "button"
+    );
+
+
+  button.type =
+    "button";
+
+
+  button.className =
+    "member";
+
+
+  if(
+    participant.id ===
+    activeParticipantId
+  ){
+
+    button.classList.add(
+      "active"
+    );
+
+  }
+
+
+  button.addEventListener(
+    "click",
+    () => {
+
+      selectParticipant(
+        participant.id
+      );
+
+    }
+  );
+
+
+  const avatar =
+    createAvatar(
+      participant
+    );
+
+
+  button.appendChild(
+    avatar
+  );
+
+
+  const info =
+    document.createElement(
+      "div"
+    );
+
+
+  info.className =
+    "member-info";
+
+
+  const name =
+    document.createElement(
+      "div"
+    );
+
+
+  name.className =
+    "member-name";
+
+
+  name.textContent =
+    participant.displayName;
+
+
+  const type =
+    document.createElement(
+      "div"
+    );
+
+
+  type.className =
+    "member-type";
+
+
+  type.textContent =
+    participant.type === "ai"
+      ? "AI"
+      : "自分";
+
+
+  info.appendChild(
+    name
+  );
+
+
+  info.appendChild(
+    type
+  );
+
+
+  button.appendChild(
+    info
+  );
+
+
+  return button;
+
+}
+
+
+/* =========================================================
+   スマホ参加者
+========================================================= */
+
+function createMobileMemberElement(
+  participant
+){
+
+  const button =
+    document.createElement(
+      "button"
+    );
+
+
+  button.type =
+    "button";
+
+
+  button.className =
+    "mobile-member";
+
+
+  if(
+    participant.id ===
+    activeParticipantId
+  ){
+
+    button.classList.add(
+      "active"
+    );
+
+  }
+
+
+  button.addEventListener(
+    "click",
+    () => {
+
+      selectParticipant(
+        participant.id
+      );
+
+    }
+  );
+
+
+  const avatar =
+    createAvatar(
+      participant,
+      true
+    );
+
+
+  button.appendChild(
+    avatar
+  );
+
+
+  const name =
+    document.createElement(
+      "span"
+    );
+
+
+  name.className =
+    "mobile-member-name";
+
+
+  name.textContent =
+    participant.displayName;
+
+
+  button.appendChild(
+    name
+  );
+
+
+  return button;
+
+}
+
+
+/* =========================================================
+   アバター
+========================================================= */
+
+function createAvatar(
+  participant,
+  mobile = false
+){
+
+  const avatar =
+    document.createElement(
+      "div"
+    );
+
+
+  avatar.className =
+    mobile
+      ? "mobile-member-avatar"
+      : "member-avatar";
+
+
+  const img =
+    document.createElement(
+      "img"
+    );
+
+
+  img.src =
+    `${participant.character}.png`;
+
+
+  img.onerror =
+    () => {
+
+      img.remove();
+
+      avatar.textContent =
+        getInitial(
+          participant.displayName
+        );
+
+    };
+
+
+  avatar.appendChild(
+    img
+  );
+
+
+  if(!mobile){
+
+    const dot =
+      document.createElement(
+        "span"
+      );
+
+
+    dot.className =
+      "online-dot";
+
+
+    avatar.appendChild(
+      dot
+    );
+
+  }
+
+
+  return avatar;
+
+}
+
+
+/* =========================================================
+   頭文字
+========================================================= */
+
+function getInitial(
+  name
+){
+
+  if(!name){
+
+    return "?";
+
+  }
+
+
+  return name
+    .trim()
+    .charAt(0);
+
+}
+
+
+/* =========================================================
+   入力状態
+========================================================= */
+
+function updateInputState(){
+
+  const participant =
+    participants.find(
+      item =>
+        item.id ===
+        activeParticipantId
+    );
+
+
+  if(
+    !participant ||
+    participant.type !== "user"
+  ){
+
+    currentSpeakerName.textContent =
+      "まず入室してください";
+
+
+    messageInput.disabled =
+      true;
+
+
+    sendBtn.disabled =
+      true;
+
+
+    messageInput.placeholder =
+      "「＋ 入室」から参加してください";
+
+
+    return;
+
+  }
+
+
+  currentSpeakerName.textContent =
+    participant.displayName;
+
+
+  messageInput.disabled =
+    false;
+
+
+  sendBtn.disabled =
+    false;
+
+
+  messageInput.placeholder =
+    `${participant.displayName} として発言`;
+
+
+  messageInput.focus();
+
+}
+
+
+/* =========================================================
+   システムメッセージ
+========================================================= */
+
+function addSystemMessage(
+  text
+){
+
+  roomMessages.push({
+
+    type:
+      "system",
+
+    text:
+      text,
+
+    time:
+      Date.now()
+
+  });
+
+
+  roomMessages =
+    roomMessages.slice(-60);
+
+
+  renderSystemMessage(
+    text
+  );
+
+
+  scrollChat();
+
+}
+
+
+/* =========================================================
+   システム表示
+========================================================= */
+
+function renderSystemMessage(
+  text
+){
+
+  if(emptyChat){
+
+    emptyChat.remove();
+
+  }
+
+
+  const row =
+    document.createElement(
+      "div"
+    );
+
+
+  row.className =
+    "system-message";
+
+
+  const span =
+    document.createElement(
+      "span"
+    );
+
+
+  span.textContent =
+    text;
+
+
+  row.appendChild(
+    span
+  );
+
+
+  chat.appendChild(
+    row
+  );
+
+}
+
+
+/* =========================================================
+   送信
+========================================================= */
+
+sendBtn.addEventListener(
+  "click",
+  sendMessage
+);
+
+
+messageInput.addEventListener(
+  "keydown",
+  event => {
+
+    if(
+
+      event.key === "Enter" &&
+
+      !event.shiftKey &&
+
+      !event.isComposing
+
+    ){
+
+      event.preventDefault();
+
+      sendMessage();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   メッセージ送信
+========================================================= */
+
+async function sendMessage(){
+
+  const text =
+    messageInput.value.trim();
+
+
+  if(!text){
+
+    return;
+
+  }
+
+
+  const participant =
+    participants.find(
+      item =>
+        item.id ===
+        activeParticipantId
+    );
+
+
+  if(!participant){
+
+    return;
+
+  }
+
+
+  messageInput.value =
+    "";
+
+
+  addRoomMessage({
+
+    type:
+      "message",
+
+    participantId:
+      participant.id,
+
+    participantType:
+      participant.type,
+
+    character:
+      participant.character,
+
+    name:
+      participant.displayName,
+
+    text:
+      text,
+
+    time:
+      Date.now()
+
+  });
+
+
+  /*
+   * AI参加者へ返信させる
+   */
+
+  await askAllAI();
+
+}
+
+
+/* =========================================================
+   ルームメッセージ
+========================================================= */
+
+function addRoomMessage(
+  message
+){
+
+  roomMessages.push(
+    message
+  );
+
+
+  roomMessages =
+    roomMessages.slice(-60);
+
+
+  renderMessage(
+    message
+  );
+
+
+  scrollChat();
+
+}
+
+
+/* =========================================================
+   メッセージ描画
+========================================================= */
+
+function renderMessage(
+  message
+){
+
+  if(emptyChat){
+
+    emptyChat.remove();
+
+  }
+
+
+  const participant =
+    participants.find(
+      item =>
+        item.id ===
+        message.participantId
+    );
+
+
+  const row =
+    document.createElement(
+      "div"
+    );
+
+
+  row.className =
+    "message-row";
+
+
+  if(
+    message.participantType ===
+    "user"
+  ){
+
+    row.classList.add(
+      "mine"
+    );
+
+  }
+
+
+  const avatar =
+    document.createElement(
+      "div"
+    );
+
+
+  avatar.className =
+    "avatar";
+
+
+  if(participant){
+
+    const img =
+      document.createElement(
+        "img"
+      );
+
+
+    img.src =
+      `${participant.character}.png`;
+
+
+    img.onerror =
+      () => {
+
+        img.remove();
+
+        avatar.textContent =
+          getInitial(
+            message.name
+          );
+
+      };
+
+
+    avatar.appendChild(
+      img
+    );
+
+  }else{
+
+    avatar.textContent =
+      getInitial(
+        message.name
+      );
+
+  }
+
+
+  const column =
+    document.createElement(
+      "div"
+    );
+
+
+  column.className =
+    "message-column";
+
+
+  const nameLine =
+    document.createElement(
+      "div"
+    );
+
+
+  nameLine.className =
+    "message-name-line";
+
+
+  const name =
+    document.createElement(
+      "span"
+    );
+
+
+  name.className =
+    "message-name";
+
+
+  name.textContent =
+    message.name;
+
+
+  const time =
+    document.createElement(
+      "span"
+    );
+
+
+  time.className =
+    "message-time";
+
+
+  time.textContent =
+    formatTime(
+      message.time
+    );
+
+
+  nameLine.appendChild(
+    name
+  );
+
+
+  nameLine.appendChild(
+    time
+  );
+
+
+  const bubble =
+    document.createElement(
+      "div"
+    );
+
+
+  bubble.className =
+    "bubble";
+
+
+  bubble.textContent =
+    message.text;
+
+
+  column.appendChild(
+    nameLine
+  );
+
+
+  column.appendChild(
+    bubble
+  );
+
+
+  row.appendChild(
+    avatar
+  );
+
+
+  row.appendChild(
+    column
+  );
+
+
+  chat.appendChild(
+    row
+  );
+
+}
+
+
+/* =========================================================
+   時刻
+========================================================= */
+
+function formatTime(
+  timestamp
+){
+
+  const date =
+    new Date(
+      timestamp
+    );
+
+
+  return date.toLocaleTimeString(
+    "ja-JP",
+    {
+      hour:"2-digit",
+      minute:"2-digit"
+    }
+  );
+
+}
+
+
+/* =========================================================
+   スクロール
+========================================================= */
+
+function scrollChat(){
+
+  requestAnimationFrame(
+    () => {
+
+      chat.scrollTop =
+        chat.scrollHeight;
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   キャラクター関連の歴史だけ取得
+========================================================= */
+
+function getRelevantHistoricalMemory(
+  participant
+){
+
+  const baseName =
+    getCharacterName(
+      participant.character
+    );
+
+
+  if(
+    participant.character ===
+    "blank"
+  ){
+
+    /*
+     * 神田大志については
+     * character欄に「大志」が入っているものを取得。
+     */
+
+    return historicalMemory
+      .filter(
+        item =>
+          String(
+            item.character || ""
+          ).includes("大志") ||
+          String(
+            item.summary || ""
+          ).includes("大志")
+      )
+      .slice(-20);
+
+  }
+
+
+  return historicalMemory
+    .filter(
+      item => {
+
+        const characterText =
+          String(
+            item.character || ""
+          );
+
+
+        return characterText.includes(
+          baseName
+        );
+
+      }
+    )
+    .slice(-20);
+
+}
+
+
+/* =========================================================
+   ルームログ
+========================================================= */
+
+function buildRoomContext(){
+
+  const messages =
+    roomMessages
+      .slice(-15);
+
+
+  if(!messages.length){
+
+    return "まだ発言はありません。";
+
+  }
+
+
+  return messages
+    .map(
+      message => {
+
+        if(message.type === "event"){
+
+          return `【${message.text}】`;
+
+        }
+
+        return `${message.name}: ${message.text}`;
+
+      }
+    )
+    .join("
+");
+
+}
+
+
+/* =========================================================
+   AI全員
+========================================================= */
+
+async function askAllAI(){
+
+  const aiParticipants =
+    participants.filter(
+      participant =>
+        participant.type === "ai"
+    );
+
+
+  if(!aiParticipants.length){
+
+    return;
+
+  }
+
+
+  /*
+   * AIをランダムに並べ替え、
+   * 最大2人だけ選ぶ。
+   */
+
+  const shuffled =
+    [...aiParticipants]
+      .sort(
+        () =>
+          Math.random() - 0.5
+      );
+
+
+  const selected =
+    shuffled.slice(
+      0,
+      Math.min(
+        2,
+        shuffled.length
+      )
+    );
+
+
+  aiBusy = true;
+
+
+  for(
+    const participant
+    of selected
+  ){
+
+    const stillOnline =
+      participants.some(
+        item =>
+          item.id ===
+          participant.id
+      );
+
+
+    if(!stillOnline){
+
+      continue;
+
+    }
+
+
+    await requestAIResponse(
+      participant
+    );
+
+  }
+
+
+  aiBusy = false;
+
+}
+
+
+/* =========================================================
+   タイピング表示
+========================================================= */
+
+function showTyping(
+  participant
+){
+
+  const row =
+    document.createElement(
+      "div"
+    );
+
+
+  row.className =
+    "message-row";
+
+
+  row.dataset.typingId =
+    participant.id;
+
+
+  const avatar =
+    document.createElement(
+      "div"
+    );
+
+
+  avatar.className =
+    "avatar";
+
+
+  const img =
+    document.createElement(
+      "img"
+    );
+
+
+  img.src =
+    `${participant.character}.png`;
+
+
+  img.onerror =
+    () => {
+
+      img.remove();
+
+      avatar.textContent =
+        getInitial(
+          participant.displayName
+        );
+
+    };
+
+
+  avatar.appendChild(
+    img
+  );
+
+
+  const column =
+    document.createElement(
+      "div"
+    );
+
+
+  column.className =
+    "message-column";
+
+
+  const nameLine =
+    document.createElement(
+      "div"
+    );
+
+
+  nameLine.className =
+    "message-name-line";
+
+
+  const name =
+    document.createElement(
+      "span"
+    );
+
+
+  name.className =
+    "message-name";
+
+
+  name.textContent =
+    participant.displayName;
+
+
+  nameLine.appendChild(
+    name
+  );
+
+
+  const typing =
+    document.createElement(
+      "div"
+    );
+
+
+  typing.className =
+    "typing";
+
+
+  for(
+    let i = 0;
+    i < 3;
+    i++
+  ){
+
+    const dot =
+      document.createElement(
+        "span"
+      );
+
+
+    dot.className =
+      "typing-dot";
+
+
+    typing.appendChild(
+      dot
+    );
+
+  }
+
+
+  column.appendChild(
+    nameLine
+  );
+
+
+  column.appendChild(
+    typing
+  );
+
+
+  row.appendChild(
+    avatar
+  );
+
+
+  row.appendChild(
+    column
+  );
+
+
+  chat.appendChild(
+    row
+  );
+
+
+  scrollChat();
+
+
+  return row;
+
+}
+
+
+/* =========================================================
+   AI応答
+========================================================= */
+
+/* =========================================================
+   AI応答
+========================================================= */
+
+async function requestAIResponse(
+  participant
+){
+
+  const typing =
+    showTyping(
+      participant
+    );
+
+
+  try{
+
+    /*
+     * =====================================================
+     * 1. このAI専用の過去
+     *
+     * history.json から、このキャラクターに関係する
+     * 出来事だけを取得する。
+     * =====================================================
+     */
+
+    const relevantHistory =
+      getRelevantHistoricalMemory(
+        participant
+      );
+
+
+    /*
+     * =====================================================
+     * 2. OpenChatの現在の会話
+     *
+     * 人格設定を圧迫しないよう、直近15件だけ。
+     * =====================================================
+     */
+
+    const roomContext =
+      buildRoomContext();
+
+
+    /*
+     * =====================================================
+     * 3. OpenChat用の追加指示
+     *
+     * ここは短くする。
+     *
+     * 「どういう人間か」は .txt が決める。
+     * ここでは「どこで話しているか」だけを指定する。
+     * =====================================================
+     */
+
+    const openChatInstruction = `
+
+【現在の状況】
+
+あなたは「${participant.displayName}」として、
+オープンチャットに参加しています。
+
+あなたの人格・口調・価値観・性格・過去の設定については、
+読み込まれた基本プロンプト（.txt）を最優先してください。
+
+以下は、その人格を変えるための設定ではありません。
+現在の会話状況を把握するための情報です。
+
+【ルーム内の発言】
+
+${roomContext}
+
+他の参加者の発言と、自分の発言を区別してください。
+AIやプロンプトについてのメタ発言はしないでください。
+
+自然な会話として、必要なら返信してください。
+`;
+
+
+    /*
+     * =====================================================
+     * 4. API
+     *
+     * character.txt を prompt の先頭に置く。
+     *
+     * 「人格設定」
+     * ↓
+     * 「OpenChatでの現在状況」
+     *
+     * という順番にする。
+     * =====================================================
+     */
+
+    const response =
+      await fetch(
+        window.location.origin +
+        "/api/deepseek",
+        {
+
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
+
+          body:
+            JSON.stringify({
+
+              /*
+               * ルームログそのものを
+               * character prompt より強い命令として
+               * 扱わせないため、historyには
+               * 最小限だけ渡す。
+               */
+
+              history:[],
+
+              character:
+                participant.character,
+
+              /*
+               * ★ 最重要
+               *
+               * .txt
+               * ↓
+               * OpenChatの状況
+               *
+               * の順番。
+               */
+
+              prompt:
+                participant.prompt +
+                openChatInstruction,
+
+              /*
+               * このキャラクターに関係する
+               * 過去の出来事だけ。
+               */
+
+              historicalMemory:
+                relevantHistory,
+
+              image:
+                null
+
+            })
+
+        }
+      );
+
+
+    const raw =
+      await response.text();
+
+
+    typing.remove();
+
+
+    let data;
+
+
+    try{
+
+      data =
+        JSON.parse(
+          raw
+        );
+
+    }catch(error){
+
+      console.error(
+        "AI JSON ERROR:",
+        raw
+      );
+
+      return;
+
+    }
+
+
+    if(!response.ok){
+
+      console.error(
+        "AI API ERROR:",
+        data
+      );
+
+      return;
+
+    }
+
+
+    if(
+      typeof data.reply !==
+      "string"
+    ){
+
+      return;
+
+    }
+
+
+    /*
+     * =====================================================
+     * AIが退室していた場合は表示しない
+     * =====================================================
+     */
+
+    const stillOnline =
+      participants.some(
+        item =>
+          item.id ===
+          participant.id
+      );
+
+
+    if(!stillOnline){
+
+      return;
+
+    }
+
+
+    /*
+     * =====================================================
+     * 空返信
+     * =====================================================
+     */
+
+    const reply =
+      data.reply.trim();
+
+
+    if(!reply){
+
+      return;
+
+    }
+
+
+    /*
+     * =====================================================
+     * ルームに追加
+     * =====================================================
+     */
+
+    addRoomMessage({
+
+      type:
+        "message",
+
+      participantId:
+        participant.id,
+
+      participantType:
+        "ai",
+
+      character:
+        participant.character,
+
+      name:
+        participant.displayName,
+
+      text:
+        reply,
+
+      time:
+        Date.now()
+
+    });
+
+
+  }catch(error){
+
+    typing.remove();
+
+
+    console.error(
+      "AI FETCH ERROR:",
+      error
+    );
+
+  }
+
+}
+
+
+
+/* =========================================================
+   起動
+========================================================= */
+
+initialize();
+
+</script>
+
+
+</body>
+
+</html>
