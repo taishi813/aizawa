@@ -3,9 +3,11 @@ const https = require("https");
 
 module.exports = function handler(req, res) {
 
-  /* =========================
-     CORS
-  ========================= */
+  /*
+   * =========================
+   * CORS
+   * =========================
+   */
 
   res.setHeader(
     "Access-Control-Allow-Origin",
@@ -23,55 +25,61 @@ module.exports = function handler(req, res) {
   );
 
 
-  /* =========================
-     OPTIONS
-  ========================= */
+  if (req.method === "OPTIONS") {
 
-  if(req.method === "OPTIONS"){
     res.status(200).end();
+
     return;
+
   }
 
 
-  /* =========================
-     POST ONLY
-  ========================= */
+  if (req.method !== "POST") {
 
-  if(req.method !== "POST"){
     res.status(405).json({
-      error:"Method not allowed"
+
+      error: "Method not allowed"
+
     });
+
     return;
+
   }
 
 
-  /* =========================
-     API KEY
-  ========================= */
+  /*
+   * =========================
+   * API Key
+   * =========================
+   */
 
   const apiKey =
     process.env.DEEPSEEK_API_KEY;
 
-  if(!apiKey){
+
+  if (!apiKey) {
 
     res.status(500).json({
-      error:"DEEPSEEK_API_KEY が設定されていません"
+
+      error:
+        "DEEPSEEK_API_KEY が設定されていません"
+
     });
 
     return;
+
   }
 
 
-  /* =========================
-     REQUEST BODY
-  ========================= */
+  /*
+   * =========================
+   * Request body
+   * =========================
+   */
 
-  const body = req.body || {};
+  const body =
+    req.body || {};
 
-
-  /* =========================
-     CHAT HISTORY
-  ========================= */
 
   const history =
     Array.isArray(body.history)
@@ -79,17 +87,10 @@ module.exports = function handler(req, res) {
       : [];
 
 
-  /* =========================
-     CHARACTER
-  ========================= */
-
   const character =
-    body.character || "manager";
+    body.character ||
+    "manager";
 
-
-  /* =========================
-     CHARACTER PROMPT
-  ========================= */
 
   const clientPrompt =
     typeof body.prompt === "string"
@@ -97,19 +98,13 @@ module.exports = function handler(req, res) {
       : "";
 
 
-  /* =========================
-     SHARED HISTORICAL MEMORY
-  ========================= */
-
   const historicalMemory =
-    Array.isArray(body.historicalMemory)
+    Array.isArray(
+      body.historicalMemory
+    )
       ? body.historicalMemory
       : [];
 
-
-  /* =========================
-     IMAGE
-  ========================= */
 
   const image =
     typeof body.image === "string"
@@ -117,104 +112,82 @@ module.exports = function handler(req, res) {
       : "";
 
 
-  /* =========================================================
-     検索用テキストを作る
-     
-     最新のユーザー発言を優先し、
-     必要に応じて直近の会話も検索材料にする。
-  ========================================================= */
+  /*
+   * =========================
+   * 検索対象テキスト
+   * =========================
+   *
+   * history.jsonの中から
+   * 今回の会話に関連するものを
+   * 探すために使う。
+   */
 
-  function getSearchText(){
+  function getSearchText() {
 
-    const parts = [];
-
-
-    /*
-     * 直近3件のユーザー発言
-     */
-
-    for(
-      let i = history.length - 1;
-      i >= 0 && parts.length < 3;
-      i--
-    ){
-
-      const message =
-        history[i];
+    const recent =
+      history
+        .slice(-6);
 
 
-      if(
-        message &&
-        message.role === "user" &&
-        typeof message.content === "string"
-      ){
-
-        parts.unshift(
-          message.content
+    const userMessages =
+      recent
+        .filter(
+          item =>
+            item &&
+            item.role === "user" &&
+            typeof item.content ===
+              "string"
+        )
+        .slice(-3)
+        .map(
+          item => item.content
         );
 
-      }
+
+    if (
+      userMessages.length > 0
+    ) {
+
+      return userMessages.join(
+        "\n"
+      );
 
     }
 
 
-    /*
-     * ユーザー発言がなければ
-     * 直近4件の会話を使用
-     */
-
-    if(parts.length === 0){
-
-      for(
-        let i = Math.max(
-          0,
-          history.length - 4
-        );
-        i < history.length;
-        i++
-      ){
-
-        const message =
-          history[i];
-
-
-        if(
-          message &&
-          typeof message.content === "string"
-        ){
-
-          parts.push(
-            message.content
-          );
-
-        }
-
-      }
-
-    }
-
-
-    return parts.join(" ");
+    return recent
+      .map(
+        item =>
+          typeof item.content ===
+            "string"
+            ? item.content
+            : ""
+      )
+      .join("\n");
 
   }
 
 
-  /* =========================================================
-     日本語向け検索トークン生成
-  ========================================================= */
+  /*
+   * =========================
+   * 日本語向け簡易tokenize
+   * =========================
+   */
 
-  function tokenize(text){
+  function tokenize(text) {
 
-    if(!text){
+    if (!text) {
+
       return [];
+
     }
 
 
     const normalized =
-      text
+      String(text)
         .toLowerCase()
         .replace(
-          /、。！？「」『』（）()［］\[\]【】,.!?]/g,
+          /[\s　]+/g,
           " "
         );
 
@@ -222,132 +195,81 @@ module.exports = function handler(req, res) {
     const tokens = [];
 
 
-    /* =========================
-       英数字
-    ========================= */
+    /*
+     * 英数字
+     */
 
-    const latinMatches =
+    const latin =
       normalized.match(
-        /[a-z0-9][a-z0-9_-]*/g
-      ) || [];
+        /[a-z0-9_]{2,}/g
+      );
 
 
-    latinMatches.forEach(word => {
+    if (latin) {
 
-      if(word.length >= 2){
+      tokens.push(
+        ...latin
+      );
 
-        tokens.push(word);
-
-      }
-
-    });
+    }
 
 
-    /* =========================
-       漢字
-    ========================= */
+    /*
+     * 漢字
+     */
 
-    const kanjiMatches =
+    const kanji =
       normalized.match(
-        /[\u3400-\u4dbf\u4e00-\u9fff]{2,}/g
-      ) || [];
+        /[\u3400-\u9fff]{2,}/g
+      );
 
 
-    kanjiMatches.forEach(word => {
+    if (kanji) {
 
-      tokens.push(word);
+      tokens.push(
+        ...kanji
+      );
 
-
-      /*
-       * 長い漢字語は2文字単位にも分解
-       */
-
-      if(word.length >= 3){
-
-        for(
-          let i = 0;
-          i <= word.length - 2;
-          i++
-        ){
-
-          tokens.push(
-            word.slice(i, i + 2)
-          );
-
-        }
-
-      }
-
-    });
+    }
 
 
-    /* =========================
-       ひらがな
-    ========================= */
+    /*
+     * ひらがな
+     */
 
-    const hiraganaMatches =
+    const hiragana =
       normalized.match(
         /[\u3040-\u309f]{2,}/g
-      ) || [];
+      );
 
 
-    const ignoredHiragana = [
+    if (hiragana) {
 
-      "する",
-      "した",
-      "して",
-      "いる",
-      "ある",
-      "なる",
-      "なっ",
-      "です",
-      "ます",
-      "だった",
-      "これ",
-      "それ",
-      "あれ",
-      "ここ",
-      "そこ",
-      "もの",
-      "こと",
-      "よう"
+      tokens.push(
+        ...hiragana
+      );
 
-    ];
+    }
 
 
-    hiraganaMatches.forEach(word => {
+    /*
+     * カタカナ
+     */
 
-      if(
-        !ignoredHiragana.includes(word)
-      ){
-
-        tokens.push(word);
-
-      }
-
-    });
-
-
-    /* =========================
-       カタカナ
-    ========================= */
-
-    const katakanaMatches =
+    const katakana =
       normalized.match(
         /[\u30a0-\u30ff]{2,}/g
-      ) || [];
+      );
 
 
-    katakanaMatches.forEach(word => {
+    if (katakana) {
 
-      tokens.push(word);
+      tokens.push(
+        ...katakana
+      );
 
-    });
+    }
 
-
-    /* =========================
-       重複削除
-    ========================= */
 
     return [
       ...new Set(tokens)
@@ -356,42 +278,42 @@ module.exports = function handler(req, res) {
   }
 
 
-  /* =========================================================
-     検索テキスト
-  ========================================================= */
-
   const searchText =
     getSearchText();
 
 
   const searchTokens =
-    tokenize(searchText);
+    tokenize(
+      searchText
+    );
 
-
-  /* =========================================================
-     現在のキャラクター
-     
-     現在のキャラクターだけに
-     絞るためには使わない。
-     
-     関連度を少し上げるためだけに使う。
-  ========================================================= */
 
   const characterToken =
     String(character)
       .toLowerCase();
 
 
-  /* =========================================================
-     新しい歴史を少し優先
-  ========================================================= */
+  /*
+   * =========================
+   * 履歴の新しさ
+   * =========================
+   */
 
-  function recencyScore(item){
+  function recencyScore(item) {
 
-    if(
-      !item ||
-      !item.date
-    ){
+    if (!item) {
+
+      return 0;
+
+    }
+
+
+    const date =
+      item.date ||
+      item.created_at;
+
+
+    if (!date) {
 
       return 0;
 
@@ -399,199 +321,155 @@ module.exports = function handler(req, res) {
 
 
     const timestamp =
-      new Date(item.date)
+      new Date(date)
         .getTime();
 
 
-    if(Number.isNaN(timestamp)){
+    if (
+      Number.isNaN(timestamp)
+    ) {
 
       return 0;
 
     }
 
 
-    const now =
-      Date.now();
+    const age =
+      Date.now() -
+      timestamp;
 
 
     const days =
-      Math.max(
-        0,
-        (now - timestamp) /
-        (1000 * 60 * 60 * 24)
+      age /
+      (
+        1000 *
+        60 *
+        60 *
+        24
       );
 
 
     /*
      * 最大15点。
      *
-     * 新しい記録ほど少し優先する。
+     * 新しい履歴ほど高得点。
      */
 
-    return Math.max(
-      0,
-      15 - days * 0.05
-    );
+    if (days <= 1) {
+
+      return 15;
+
+    }
+
+
+    if (days <= 7) {
+
+      return 12;
+
+    }
+
+
+    if (days <= 30) {
+
+      return 9;
+
+    }
+
+
+    if (days <= 90) {
+
+      return 6;
+
+    }
+
+
+    if (days <= 365) {
+
+      return 3;
+
+    }
+
+
+    return 0;
 
   }
 
 
-  /* =========================================================
-     歴史1件の関連度を計算
-     
-     対象：
-     character
-     location
-     event
-     summary
-  ========================================================= */
+  /*
+   * =========================
+   * 履歴の関連度
+   * =========================
+   */
 
-  function calculateRelevance(item){
+  function calculateRelevance(
+    item
+  ) {
 
-    if(
-      !item ||
-      typeof item !== "object"
-    ){
+    if (!item) {
 
       return 0;
 
     }
 
 
-    const itemCharacter =
-      String(
-        item.character || ""
-      ).toLowerCase();
-
-
-    const itemLocation =
-      String(
-        item.location || ""
-      ).toLowerCase();
-
-
-    const itemEvent =
-      String(
-        item.event || ""
-      ).toLowerCase();
-
-
-    const itemSummary =
-      String(
-        item.summary || ""
-      ).toLowerCase();
-
-
-    const searchableText =
-      `${itemCharacter} ${itemLocation} ${itemEvent} ${itemSummary}`;
+    const text =
+      [
+        item.character,
+        item.location,
+        item.event,
+        item.summary,
+        item.content
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
 
 
     let score = 0;
 
 
-    /* =========================
-       現在のキャラクター
-       
-       あくまで少し優先。
-       他キャラクターは排除しない。
-    ========================= */
+    /*
+     * キャラクター一致
+     */
 
-    if(
-      characterToken &&
-      itemCharacter.includes(
-        characterToken
-      )
-    ){
-
-      score += 8;
-
-    }
-
-
-    /* =========================
-       キーワード一致
-    ========================= */
-
-    searchTokens.forEach(token => {
-
-      if(!token){
-        return;
-      }
-
-
-      /*
-       * 出来事タイトル
-       */
-
-      if(
-        itemEvent.includes(token)
-      ){
-
-        score += 10;
-
-      }
-
-
-      /*
-       * 内容
-       */
-
-      if(
-        itemSummary.includes(token)
-      ){
-
-        score += 7;
-
-      }
-
-
-      /*
-       * 場所
-       */
-
-      if(
-        itemLocation.includes(token)
-      ){
-
-        score += 7;
-
-      }
-
-
-      /*
-       * キャラクター名
-       */
-
-      if(
-        itemCharacter.includes(token)
-      ){
-
-        score += 5;
-
-      }
-
-    });
-
-
-    /* =========================
-       検索文そのものとの一致
-    ========================= */
-
-    if(
-      searchText &&
-      searchableText.includes(
-        searchText.toLowerCase()
-      )
-    ){
+    if (
+      item.character &&
+      String(
+        item.character
+      ).toLowerCase()
+        .includes(
+          characterToken
+        )
+    ) {
 
       score += 20;
 
     }
 
 
-    /* =========================
-       新しさ
-    ========================= */
+    /*
+     * token一致
+     */
+
+    for (
+      const token of searchTokens
+    ) {
+
+      if (
+        token &&
+        text.includes(token)
+      ) {
+
+        score += 5;
+
+      }
+
+    }
+
+
+    /*
+     * 新しさ
+     */
 
     score +=
       recencyScore(item);
@@ -602,105 +480,103 @@ module.exports = function handler(req, res) {
   }
 
 
-  /* =========================================================
-     関連する歴史だけを抽出
-     
-     最大10件。
-  ========================================================= */
+  /*
+   * =========================
+   * 関連する歴史を抽出
+   * =========================
+   */
 
-  let relevantHistory = [];
+  let relevantHistory =
+    historicalMemory
 
+      .map(
+        item => ({
 
-  if(
-    historicalMemory.length > 0
-  ){
+          item,
 
-    relevantHistory =
-
-      historicalMemory
-
-        .map(item => {
-
-          return {
-
-            item:item,
-
-            score:
-              calculateRelevance(item)
-
-          };
+          score:
+            calculateRelevance(
+              item
+            )
 
         })
+      )
 
-        .filter(result => {
+      .filter(
+        entry =>
+          entry.score > 0
+      )
 
-          return result.score > 0;
+      .sort(
+        (a, b) =>
+          b.score -
+          a.score
+      )
 
-        })
+      .slice(
+        0,
+        10
+      )
 
-        .sort((a, b) => {
-
-          return b.score - a.score;
-
-        })
-
-        .slice(0, 10)
-
-        .map(result => {
-
-          return result.item;
-
-        });
-
-  }
+      .map(
+        entry =>
+          entry.item
+      );
 
 
-  /* =========================================================
-     SYSTEM PROMPT
-  ========================================================= */
+  /*
+   * =========================
+   * キャラクター基本設定
+   * =========================
+   */
 
   let systemPrompt =
     clientPrompt;
 
 
   /*
-   * フロントからプロンプトが
-   * 渡されなかった場合は
-   * キャラクター.txt を読む。
+   * index.htmlからpromptが
+   * 空の場合は、
+   * ${character}.txt を読む。
    */
 
-  if(!systemPrompt){
+  if (!systemPrompt) {
 
-    const fs = require("fs");
-    const path = require("path");
+    try {
+
+      const fs =
+        require("fs");
+
+      const path =
+        require("path");
 
 
-    try{
-
-      const promptPath =
+      const filePath =
         path.join(
           process.cwd(),
           `${character}.txt`
         );
 
 
-      if(
-        fs.existsSync(promptPath)
-      ){
+      if (
+        fs.existsSync(
+          filePath
+        )
+      ) {
 
         systemPrompt =
           fs.readFileSync(
-            promptPath,
+            filePath,
             "utf8"
           ).trim();
 
       }
 
-    }catch(err){
+    } catch (error) {
 
       console.error(
-        "キャラクターファイル読み込みエラー:",
-        err
+        "character prompt load error:",
+        error
       );
 
     }
@@ -708,156 +584,208 @@ module.exports = function handler(req, res) {
   }
 
 
-  /* =========================================================
-     MESSAGES
-  ========================================================= */
+  /*
+   * =========================
+   * DeepSeek messages
+   * =========================
+   */
 
   const messages = [];
 
 
-  /* =========================
-     CHARACTER PROMPT
-  ========================= */
+  /*
+   * 基本プロンプト
+   */
 
-  if(systemPrompt){
+  if (systemPrompt) {
 
     messages.push({
 
-      role:"system",
+      role: "system",
 
-      content:systemPrompt
+      content: systemPrompt
 
     });
 
   }
 
 
-  /* =========================================================
-     関連歴史
-  ========================================================= */
+  /*
+   * =========================
+   * 大志との歴史
+   * =========================
+   */
 
-  if(
+  if (
     relevantHistory.length > 0
-  ){
+  ) {
 
     let historyText =
-      "【大志との過去の歴史：今回の会話に関連する可能性が高い記録】\n\n";
+      "";
 
+    relevantHistory.forEach(
+      (item, index) => {
 
-    relevantHistory.forEach(item => {
+        historyText +=
+          `\n【過去の出来事 ${index + 1}】\n`;
 
-      historyText +=
-        `日付: ${item.date || ""}\n`;
+        if (item.date) {
 
-      historyText +=
-        `相手: ${item.character || ""}\n`;
+          historyText +=
+            `日付: ${item.date}\n`;
 
-      historyText +=
-        `場所: ${item.location || ""}\n`;
+        }
 
-      historyText +=
-        `出来事: ${item.event || ""}\n`;
+        if (item.character) {
 
-      historyText +=
-        `内容: ${item.summary || ""}\n\n`;
+          historyText +=
+            `人物: ${item.character}\n`;
 
-    });
+        }
 
+        if (item.location) {
 
-    historyText +=
-      "この記録は、大志とこの世界のキャラクターたちとの過去の出来事です。\n" +
-      "現在会話しているキャラクターだけでなく、他のキャラクターと大志との出来事も参照できます。\n" +
-      "今回の会話に関連する場合は、他のキャラクターとの過去について自然に言及したり質問したりできます。\n" +
-      "ただし、他のキャラクターが経験した出来事を、現在会話している自分自身が直接経験したことのようには扱わないでください。\n" +
-      "他のキャラクターと大志との出来事を知っている場合でも、それを自然な形で知識として扱ってください。\n" +
-      "記録にない出来事を、記録されている事実として勝手に作らないでください。\n" +
-      "今回の会話に関係する可能性が高い記録だけが選ばれています。";
+          historyText +=
+            `場所: ${item.location}\n`;
+
+        }
+
+        if (item.event) {
+
+          historyText +=
+            `出来事: ${item.event}\n`;
+
+        }
+
+        if (item.summary) {
+
+          historyText +=
+            `概要: ${item.summary}\n`;
+
+        }
+
+        if (
+          item.content &&
+          !item.summary
+        ) {
+
+          historyText +=
+            `内容: ${item.content}\n`;
+
+        }
+
+      }
+    );
 
 
     messages.push({
 
-      role:"system",
+      role: "system",
 
-      content:historyText
+      content:
+        `以下は「大志との歴史」に記録された過去の出来事です。
+これらは会話の背景として参考にしてください。
+
+重要:
+- 過去の出来事を現在起きていることとして扱わないでください。
+- 記録されていない事実を勝手に作らないでください。
+- 別のキャラクターについて記録された出来事を、自分自身の経験として混同しないでください。
+- 過去の記録と現在の会話が矛盾する場合は、現在の会話を優先してください。
+
+${historyText}`
 
     });
 
   }
 
 
-  /* =========================================================
-     CHAT HISTORY
-  ========================================================= */
+  /*
+   * =========================
+   * 現在の会話
+   * =========================
+   *
+   * index.htmlから渡された
+   * 直近20メッセージ。
+   */
 
-  for(
+  for (
     let i = 0;
     i < history.length;
     i++
-  ){
+  ) {
 
-    const message =
+    const item =
       history[i];
 
 
-    if(!message){
-      continue;
-    }
-
-
-    if(
-      message.role !== "user" &&
-      message.role !== "assistant"
-    ){
+    if (
+      !item ||
+      !item.role
+    ) {
 
       continue;
 
     }
 
 
-    if(
-      typeof message.content !== "string"
-    ){
+    const role =
+      item.role === "assistant"
+        ? "assistant"
+        : "user";
+
+
+    const content =
+      typeof item.content ===
+        "string"
+        ? item.content
+        : "";
+
+
+    if (!content) {
 
       continue;
 
     }
 
 
-    /* =========================
-       最後のユーザーメッセージ
-       + 画像
-    ========================= */
+    /*
+     * 最後のuserメッセージに
+     * 画像が添付されている場合。
+     */
 
-    const isLastUserMessage =
-      message.role === "user" &&
-      i === history.length - 1;
+    const isLast =
+      i ===
+      history.length - 1;
 
 
-    if(
-      isLastUserMessage &&
+    if (
+      role === "user" &&
+      isLast &&
       image
-    ){
+    ) {
 
       messages.push({
 
-        role:"user",
+        role: "user",
 
-        content:[
+        content: [
 
           {
-            type:"text",
 
-            text:
-              message.content ||
-              "この画像を見てください。"
+            type: "text",
+
+            text: content
 
           },
 
           {
-            type:"image_url",
 
-            image_url:{
-              url:image
+            type: "image_url",
+
+            image_url: {
+
+              url: image
+
             }
 
           }
@@ -866,13 +794,13 @@ module.exports = function handler(req, res) {
 
       });
 
-    }else{
+    } else {
 
       messages.push({
 
-        role:message.role,
+        role,
 
-        content:message.content
+        content
 
       });
 
@@ -881,34 +809,40 @@ module.exports = function handler(req, res) {
   }
 
 
-  /* =========================================================
-     IMAGE ONLY REQUEST
-  ========================================================= */
+  /*
+   * =========================
+   * 画像だけ送信された場合
+   * =========================
+   */
 
-  if(
+  if (
     image &&
-    (
-      history.length === 0 ||
-      history[history.length - 1]?.role !== "user"
-    )
-  ){
+    history.length === 0
+  ) {
 
     messages.push({
 
-      role:"user",
+      role: "user",
 
-      content:[
+      content: [
 
         {
-          type:"text",
-          text:"この画像を見てください。"
+
+          type: "text",
+
+          text:
+            "この画像について話してください。"
+
         },
 
         {
-          type:"image_url",
 
-          image_url:{
-            url:image
+          type: "image_url",
+
+          image_url: {
+
+            url: image
+
           }
 
         }
@@ -920,221 +854,216 @@ module.exports = function handler(req, res) {
   }
 
 
-  /* =========================================================
-     DEEPSEEK REQUEST BODY
-  ========================================================= */
+  /*
+   * =========================
+   * DeepSeek request
+   * =========================
+   */
 
   const requestBody =
     JSON.stringify({
 
-      model:"deepseek-flash",
+      model:
+        "deepseek-flash",
 
-      messages:messages,
+      messages,
 
-      thinking:{
-        type:"disabled"
+      thinking: {
+
+        type:
+          "disabled"
+
       },
 
-      temperature:0.9,
+      temperature:
+        0.9,
 
-      max_tokens:1500
+      max_tokens:
+        1500
 
     });
 
 
-  /* =========================================================
-     API OPTIONS
-  ========================================================= */
-
   const options = {
 
-    hostname:"api.deepseek.com",
+    hostname:
+      "api.deepseek.com",
 
-    path:"/chat/completions",
+    path:
+      "/chat/completions",
 
-    method:"POST",
+    method:
+      "POST",
 
-    headers:{
+    headers: {
 
       "Content-Type":
         "application/json",
 
-      "Authorization":
-        `Bearer ${apiKey}`,
-
       "Content-Length":
         Buffer.byteLength(
           requestBody
-        )
+        ),
+
+      "Authorization":
+        `Bearer ${apiKey}`
 
     }
 
   };
 
 
-  /* =========================================================
-     LOG
-  ========================================================= */
-
-  console.log(
-    "DeepSeek request start"
-  );
-
-  console.log(
-    "Character:",
-    character
-  );
-
-  console.log(
-    "Historical memory total:",
-    historicalMemory.length
-  );
-
-  console.log(
-    "Relevant historical memory:",
-    relevantHistory.length
-  );
-
-  console.log(
-    "Search tokens:",
-    searchTokens.length
-  );
-
-  console.log(
-    "Image attached:",
-    Boolean(image)
-  );
-
-
-  /* =========================================================
-     REQUEST
-  ========================================================= */
+  /*
+   * =========================
+   * API request
+   * =========================
+   */
 
   const request =
     https.request(
       options,
       response => {
 
-        let raw = "";
+        let responseData =
+          "";
 
-
-        /* =========================
-           RESPONSE DATA
-        ========================= */
 
         response.on(
           "data",
           chunk => {
 
-            raw += chunk;
+            responseData +=
+              chunk;
 
           }
         );
 
 
-        /* =========================
-           RESPONSE END
-        ========================= */
-
         response.on(
           "end",
           () => {
 
-            console.log(
-              "DeepSeek status:",
-              response.statusCode
-            );
+            try {
 
-            console.log(
-              "DeepSeek response:",
-              raw
-            );
+              const result =
+                JSON.parse(
+                  responseData
+                );
 
 
-            /* =========================
-               JSON PARSE
-            ========================= */
+              if (
+                response.statusCode <
+                  200 ||
+                response.statusCode >=
+                  300
+              ) {
 
-            let data;
+                console.error(
+                  "DeepSeek API error:",
+                  result
+                );
 
-            try{
 
-              data =
-                JSON.parse(raw);
+                return res
+                  .status(
+                    response.statusCode
+                  )
+                  .json({
 
-            }catch(err){
+                    error:
+                      result.error?.message ||
+                      "DeepSeek API error"
 
-              res.status(502).json({
+                  });
 
-                error:
-                  "DeepSeekから正常なJSONが返ってきませんでした"
+              }
 
-              });
 
-              return;
+              const reply =
+                result
+                  ?.choices?.[0]
+                  ?.message
+                  ?.content;
+
+
+              if (
+                typeof reply !==
+                "string"
+              ) {
+
+                console.error(
+                  "Unexpected DeepSeek response:",
+                  result
+                );
+
+
+                return res
+                  .status(500)
+                  .json({
+
+                    error:
+                      "DeepSeekから有効な返信が返ってきませんでした"
+
+                  });
+
+              }
+
+
+              /*
+               * ログ
+               */
+
+              console.log(
+                "DeepSeek chat:",
+                {
+
+                  character,
+
+                  historyCount:
+                    history.length,
+
+                  historicalMemoryCount:
+                    historicalMemory.length,
+
+                  relevantHistoryCount:
+                    relevantHistory.length,
+
+                  searchTokens,
+
+                  imageAttached:
+                    !!image
+
+                }
+              );
+
+
+              return res
+                .status(200)
+                .json({
+
+                  reply:
+                    reply.trim()
+
+                });
+
+            } catch (error) {
+
+              console.error(
+                "DeepSeek JSON parse error:",
+                error
+              );
+
+
+              return res
+                .status(500)
+                .json({
+
+                  error:
+                    "DeepSeek APIのレスポンス解析に失敗しました"
+
+                });
 
             }
-
-
-            /* =========================
-               API ERROR
-            ========================= */
-
-            if(
-              response.statusCode < 200 ||
-              response.statusCode >= 300
-            ){
-
-              res.status(
-                response.statusCode
-              ).json({
-
-                error:
-                  data?.error?.message ||
-                  "DeepSeek API Error"
-
-              });
-
-              return;
-
-            }
-
-
-            /* =========================
-               REPLY
-            ========================= */
-
-            const reply =
-              data?.choices?.[0]?.message?.content;
-
-
-            if(
-              typeof reply !== "string" ||
-              reply.trim() === ""
-            ){
-
-              res.status(200).json({
-
-                reply:
-                  "DeepSeekから返答がありませんでした"
-
-              });
-
-              return;
-
-            }
-
-
-            /* =========================
-               SUCCESS
-            ========================= */
-
-            res.status(200).json({
-
-              reply:
-                reply.trim()
-
-            });
 
           }
         );
@@ -1143,28 +1072,26 @@ module.exports = function handler(req, res) {
     );
 
 
-  /* =========================================================
-     REQUEST ERROR
-  ========================================================= */
-
   request.on(
     "error",
-    err => {
+    error => {
 
       console.error(
         "DeepSeek request error:",
-        err
+        error
       );
 
 
-      if(!res.headersSent){
+      if (!res.headersSent) {
 
-        res.status(500).json({
+        res
+          .status(500)
+          .json({
 
-          error:
-            "DeepSeekへの接続に失敗しました"
+            error:
+              "DeepSeekへの接続に失敗しました"
 
-        });
+          });
 
       }
 
@@ -1172,13 +1099,10 @@ module.exports = function handler(req, res) {
   );
 
 
-  /* =========================================================
-     SEND REQUEST
-  ========================================================= */
-
   request.write(
     requestBody
   );
+
 
   request.end();
 
