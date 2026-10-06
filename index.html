@@ -15,13 +15,15 @@
 
 :root{
 
-  --panel:rgba(255,255,255,0.94);
+  --panel:rgba(255,255,255,0.82);
+
+  --panel-strong:rgba(255,255,255,0.94);
 
   --accent:#1976d2;
 
   --accent-light:#e3f2fd;
 
-  --border:#d6d6d6;
+  --border:rgba(214,214,214,0.9);
 
   --text:#222;
 
@@ -119,6 +121,8 @@ body{
 
   transform:translateX(-50%);
 
+  width:auto;
+
   max-width:min(70vw,900px);
 
   max-height:82vh;
@@ -128,8 +132,9 @@ body{
   object-position:bottom center;
 
   /*
-   * 背景より前、
-   * チャットパネルより後ろ
+   * 背景より前。
+   * パネル自体は透明なので、
+   * スマホでも白い背景に埋もれない。
    */
 
   z-index:0;
@@ -147,10 +152,6 @@ body{
 
   position:relative;
 
-  /*
-   * キャラクター画像より前
-   */
-
   z-index:1;
 
   width:min(
@@ -162,7 +163,15 @@ body{
 
   margin:16px auto;
 
-  background:var(--panel);
+  /*
+   * ★重要
+   *
+   * パネルそのものを透明にする。
+   * これによってキャラクター画像が
+   * パネルの白背景に隠れない。
+   */
+
+  background:transparent;
 
   border:1px solid rgba(0,0,0,0.08);
 
@@ -192,6 +201,13 @@ body{
 
   flex-shrink:0;
 
+  /*
+   * 半透明の白。
+   * キャラクターを完全には隠さない。
+   */
+
+  background:rgba(255,255,255,0.88);
+
 }
 
 
@@ -220,7 +236,7 @@ body{
 
   border-radius:10px;
 
-  background:white;
+  background:rgba(255,255,255,0.96);
 
   color:var(--text);
 
@@ -247,6 +263,8 @@ body{
   border-bottom:1px solid var(--border);
 
   flex-shrink:0;
+
+  background:rgba(255,255,255,0.84);
 
 }
 
@@ -280,7 +298,7 @@ body{
 
 .collapsible-header:hover{
 
-  background:#f7f7f7;
+  background:rgba(247,247,247,0.85);
 
 }
 
@@ -335,6 +353,8 @@ textarea{
 
   border-radius:10px;
 
+  background:rgba(255,255,255,0.96);
+
   font-size:13px;
 
   line-height:1.6;
@@ -383,7 +403,7 @@ textarea{
 
   margin-bottom:8px;
 
-  background:#fafafa;
+  background:rgba(250,250,250,0.92);
 
   border:1px solid #e5e5e5;
 
@@ -459,6 +479,15 @@ textarea{
 
   scroll-behavior:smooth;
 
+  /*
+   * ★重要
+   *
+   * チャット領域も完全な白ではなく、
+   * 半透明にする。
+   */
+
+  background:rgba(255,255,255,0.52);
+
 }
 
 
@@ -500,7 +529,7 @@ textarea{
 
   margin-right:auto;
 
-  background:#f1f1f1;
+  background:rgba(241,241,241,0.90);
 
   color:#222;
 
@@ -530,7 +559,7 @@ textarea{
 
   border-top:1px solid var(--border);
 
-  background:#fafafa;
+  background:rgba(250,250,250,0.94);
 
 }
 
@@ -606,7 +635,12 @@ textarea{
 
   border-top:1px solid var(--border);
 
-  background:rgba(255,255,255,0.98);
+  /*
+   * 入力欄は読みやすさ優先で
+   * ほぼ不透明。
+   */
+
+  background:rgba(255,255,255,0.95);
 
   flex-shrink:0;
 
@@ -628,6 +662,8 @@ textarea{
   border:1px solid var(--border);
 
   border-radius:12px;
+
+  background:rgba(255,255,255,0.98);
 
   font-size:14px;
 
@@ -657,7 +693,7 @@ textarea{
 
   border-radius:12px;
 
-  background:white;
+  background:rgba(255,255,255,0.98);
 
   color:#444;
 
@@ -775,19 +811,55 @@ textarea{
 
     border:0;
 
+    /*
+     * スマホでは完全に透明。
+     */
+
+    background:transparent;
+
+    box-shadow:none;
+
   }
 
 
   #characterImg{
 
+    /*
+     * スマホではキャラクターを
+     * 画面下部にしっかり表示。
+     */
+
     max-width:95vw;
 
-    max-height:70vh;
+    max-height:72vh;
+
+    bottom:0;
+
+  }
+
+
+  .character-select-area{
+
+    background:rgba(255,255,255,0.84);
+
+  }
+
+
+  .collapsible{
+
+    background:rgba(255,255,255,0.80);
 
   }
 
 
   #chat{
+
+    /*
+     * キャラクターが見える程度に
+     * 白を薄くする。
+     */
+
+    background:rgba(255,255,255,0.42);
 
     padding:14px 12px 16px;
 
@@ -803,9 +875,18 @@ textarea{
   }
 
 
+  .message.ai{
+
+    background:rgba(241,241,241,0.88);
+
+  }
+
+
   .input-area{
 
     padding:8px;
+
+    background:rgba(255,255,255,0.95);
 
   }
 
