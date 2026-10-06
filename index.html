@@ -127,7 +127,12 @@ body{
 
   object-position:bottom center;
 
-  z-index:-1;
+  /*
+   * 背景より前、
+   * チャットパネルより後ろ
+   */
+
+  z-index:0;
 
   pointer-events:none;
 
@@ -141,6 +146,12 @@ body{
 .left-panel{
 
   position:relative;
+
+  /*
+   * キャラクター画像より前
+   */
+
+  z-index:1;
 
   width:min(
     calc(100% - 32px),
@@ -1199,18 +1210,6 @@ const MAX_MESSAGES =
   20;
 
 
-/*
- * 1ブラウザにつき1つのID。
- *
- * Supabase側では
- *
- * session_id
- * +
- * character
- *
- * で会話を分ける。
- */
-
 const SESSION_STORAGE_KEY =
   "deepseek_chat_session_id";
 
@@ -1273,11 +1272,9 @@ const sessionId =
 let history = [];
 
 
-/* history.json */
 let historicalMemory = [];
 
 
-/* 選択中の画像 */
 let selectedImage = null;
 
 
@@ -1571,21 +1568,26 @@ async function applyCharacter(){
     `${char}.png`;
 
 
+  characterImg.onerror =
+    () => {
+
+      console.error(
+        "キャラクター画像を読み込めません:",
+        imagePath
+      );
+
+      characterImg.style.display =
+        "none";
+
+    };
+
+
   characterImg.src =
     imagePath;
 
 
   characterImg.style.display =
     "block";
-
-
-  characterImg.onerror =
-    () => {
-
-      characterImg.style.display =
-        "none";
-
-    };
 
 
   /*
@@ -1687,13 +1689,6 @@ async function loadChatHistory(){
         : [];
 
 
-    /*
-     * 最新20件を受け取る想定。
-     *
-     * 念のためブラウザ側でも
-     * 20件に制限。
-     */
-
     history =
       logs
         .filter(item => {
@@ -1718,10 +1713,6 @@ async function loadChatHistory(){
 
         }));
 
-
-    /*
-     * 画面を復元
-     */
 
     chat.innerHTML = "";
 
@@ -1754,12 +1745,6 @@ async function loadChatHistory(){
       error
     );
 
-
-    /*
-     * Supabaseがまだ設定されていない
-     * 場合などでも、チャット自体は
-     * 使用できるようにする。
-     */
 
     history = [];
 
@@ -1830,11 +1815,6 @@ async function saveChatMessage(
 
   }catch(error){
 
-    /*
-     * 保存失敗しても
-     * チャットそのものは止めない。
-     */
-
     console.error(
       "CHAT HISTORY SAVE ERROR:",
       error
@@ -1883,7 +1863,7 @@ function addMessage(
 
 
 /* =========================================================
-   画像
+   画像添付
 ========================================================= */
 
 imageBtn.addEventListener(
@@ -1975,10 +1955,6 @@ async function send(){
     input.value.trim();
 
 
-  /*
-   * テキストも画像もない場合
-   */
-
   if(
     !text &&
     !selectedImage
@@ -1989,21 +1965,9 @@ async function send(){
   }
 
 
-  /*
-   * 送信時点のキャラクターを固定。
-   *
-   * AIの返答待ち中にキャラクターを
-   * 変更されても、別キャラクターへ
-   * 保存されないようにする。
-   */
-
   const currentCharacter =
     characterSelect.value;
 
-
-  /*
-   * ユーザー表示用
-   */
 
   const userDisplayText =
     text ||
@@ -2015,10 +1979,6 @@ async function send(){
     "user"
   );
 
-
-  /*
-   * historyへ追加
-   */
 
   history.push({
 
@@ -2033,15 +1993,6 @@ async function send(){
     history.slice(-MAX_MESSAGES);
 
 
-  /*
-   * Supabaseへ保存
-   *
-   * awaitしない。
-   *
-   * 履歴保存の通信で
-   * DeepSeekへの送信を遅らせない。
-   */
-
   void saveChatMessage(
 
     "user",
@@ -2053,16 +2004,8 @@ async function send(){
   );
 
 
-  /*
-   * 入力欄を空にする
-   */
-
   input.value = "";
 
-
-  /*
-   * 送信用画像を退避
-   */
 
   const imageToSend =
     selectedImage;
@@ -2070,10 +2013,6 @@ async function send(){
 
   removeSelectedImage();
 
-
-  /*
-   * 考え中表示
-   */
 
   const thinking =
     addMessage(
@@ -2087,10 +2026,6 @@ async function send(){
 
 
   try{
-
-    /*
-     * DeepSeekへ送る
-     */
 
     const response =
       await fetch(
@@ -2169,27 +2104,13 @@ async function send(){
     }
 
 
-    /*
-     * 考え中を削除
-     */
-
     thinking.remove();
 
-
-    /*
-     * もし返答待ちの間に
-     * キャラクターを変更していたら、
-     * 現在の画面には表示しない。
-     */
 
     if(
       characterSelect.value !==
       currentCharacter
     ){
-
-      /*
-       * Supabaseへの保存は行う。
-       */
 
       void saveChatMessage(
 
@@ -2207,19 +2128,11 @@ async function send(){
     }
 
 
-    /*
-     * AI返信を表示
-     */
-
     addMessage(
       data.reply.trim(),
       "ai"
     );
 
-
-    /*
-     * historyへ追加
-     */
 
     history.push({
 
@@ -2233,10 +2146,6 @@ async function send(){
     history =
       history.slice(-MAX_MESSAGES);
 
-
-    /*
-     * Supabaseへ保存
-     */
 
     void saveChatMessage(
 
@@ -2288,11 +2197,6 @@ input.addEventListener(
   "keydown",
   event => {
 
-    /*
-     * Shift + Enter
-     * → 改行
-     */
-
     if(
       event.key === "Enter" &&
       !event.shiftKey &&
@@ -2327,10 +2231,6 @@ characterSelect.addEventListener(
   "change",
   async () => {
 
-    /*
-     * 現在の画面をリセット
-     */
-
     history = [];
 
     chat.innerHTML = "";
@@ -2338,17 +2238,8 @@ characterSelect.addEventListener(
     removeSelectedImage();
 
 
-    /*
-     * キャラクター設定を読み込む
-     */
-
     await applyCharacter();
 
-
-    /*
-     * そのキャラクターの
-     * Supabase履歴を復元
-     */
 
     await loadChatHistory();
 
@@ -2362,41 +2253,16 @@ characterSelect.addEventListener(
 
 async function initialize(){
 
-  /*
-   * キャラクター画像・背景・txt
-   */
-
   await applyCharacter();
-
-
-  /*
-   * history.json
-   */
 
   await loadHistoricalMemory();
 
-
-  /*
-   * Supabaseの直近10往復
-   *
-   * ここで画面にも復元される。
-   */
-
   await loadChatHistory();
-
-
-  /*
-   * 入力欄へ
-   */
 
   input.focus();
 
 }
 
-
-/*
- * 起動
- */
 
 initialize();
 
