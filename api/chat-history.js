@@ -1,20 +1,34 @@
 import { createClient } from "@supabase/supabase-js";
 
+console.log("=== chat-history.js loaded ===");
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceRoleKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+console.log(
+  "SUPABASE_URL exists:",
+  !!supabaseUrl
+);
+
+console.log(
+  "SUPABASE_SERVICE_ROLE_KEY exists:",
+  !!supabaseServiceRoleKey
+);
+
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  supabaseUrl,
+  supabaseServiceRoleKey
 );
 
 export default async function handler(req, res) {
 
-  /*
-   * =========================
-   * GET
-   * =========================
-   *
-   * 現在のセッション＋キャラクターの
-   * 直近20メッセージを取得
-   */
+  console.log("=== CHAT HISTORY API CALLED ===");
+  console.log("METHOD:", req.method);
+
+  // =========================
+  // GET
+  // =========================
 
   if (req.method === "GET") {
 
@@ -24,101 +38,96 @@ export default async function handler(req, res) {
     const sessionId =
       String(req.query.session_id || "");
 
+    console.log("GET character:", character);
+    console.log("GET session_id exists:", !!sessionId);
 
     if (!character) {
+
+      console.log(
+        "ERROR: character is missing"
+      );
 
       return res.status(400).json({
         error: "character is required"
       });
-
     }
 
-
     if (!sessionId) {
+
+      console.log(
+        "ERROR: session_id is missing"
+      );
 
       return res.status(400).json({
         error: "session_id is required"
       });
-
     }
 
+    console.log(
+      "Loading history from Supabase..."
+    );
 
-    const { data, error } =
-      await supabase
-
-        .from("chat_logs")
-
-        .select(
-          "role, content, created_at"
-        )
-
-        .eq(
-          "character",
-          character
-        )
-
-        .eq(
-          "session_id",
-          sessionId
-        )
-
-        .order(
-          "created_at",
-          {
-            ascending: false
-          }
-        )
-
-        .limit(20);
-
+    const {
+      data,
+      error
+    } = await supabase
+      .from("chat_logs")
+      .select(
+        "role, content, created_at"
+      )
+      .eq(
+        "character",
+        character
+      )
+      .eq(
+        "session_id",
+        sessionId
+      )
+      .order(
+        "created_at",
+        {
+          ascending: false
+        }
+      )
+      .limit(20);
 
     if (error) {
 
-      console.error(error);
+      console.error(
+        "SUPABASE GET ERROR:",
+        error
+      );
 
       return res.status(500).json({
         error: error.message
       });
-
     }
 
+    console.log(
+      "Supabase GET success."
+    );
 
-    /*
-     * DBからは新しい順。
-     *
-     * AI・画面では
-     * 古い → 新しい
-     * に戻す。
-     */
+    console.log(
+      "Rows found:",
+      data ? data.length : 0
+    );
 
     const history =
       (data || [])
         .reverse()
         .map(item => ({
-
           role: item.role,
-
           content: item.content
-
         }));
 
-
     return res.status(200).json({
-
       history
-
     });
-
   }
 
-
-  /*
-   * =========================
-   * POST
-   * =========================
-   *
-   * 会話を1件保存
-   */
+  // =========================
+  // POST
+  // =========================
 
   if (req.method === "POST") {
 
@@ -129,6 +138,31 @@ export default async function handler(req, res) {
       content
     } = req.body || {};
 
+    console.log(
+      "=== SAVE REQUEST ==="
+    );
+
+    console.log(
+      "session_id exists:",
+      !!session_id
+    );
+
+    console.log(
+      "character:",
+      character
+    );
+
+    console.log(
+      "role:",
+      role
+    );
+
+    console.log(
+      "content length:",
+      content
+        ? content.length
+        : 0
+    );
 
     if (
       !session_id ||
@@ -137,99 +171,99 @@ export default async function handler(req, res) {
       !content
     ) {
 
-      return res.status(400).json({
+      console.log(
+        "ERROR: required data missing"
+      );
 
+      return res.status(400).json({
         error:
           "session_id, character, role, content are required"
-
       });
-
     }
-
-
-    /*
-     * roleチェック
-     */
 
     if (
       role !== "user" &&
       role !== "assistant"
     ) {
 
-      return res.status(400).json({
+      console.log(
+        "ERROR: invalid role"
+      );
 
+      return res.status(400).json({
         error:
           "role must be user or assistant"
-
       });
-
     }
 
+    // =========================
+    // Supabase INSERT
+    // =========================
 
-    const { error } =
-      await supabase
+    console.log(
+      "Inserting into Supabase..."
+    );
 
-        .from("chat_logs")
-
-        .insert({
-
-          session_id,
-
-          character,
-
-          role,
-
-          content
-
-        });
-
+    const {
+      error
+    } = await supabase
+      .from("chat_logs")
+      .insert({
+        session_id,
+        character,
+        role,
+        content
+      });
 
     if (error) {
 
-      console.error(error);
+      console.error(
+        "SUPABASE INSERT ERROR:",
+        error
+      );
 
       return res.status(500).json({
-
         error: error.message
-
       });
-
     }
 
+    console.log(
+      "SUPABASE INSERT SUCCESS"
+    );
 
-    /*
-     * このセッション＋キャラクターについて
-     * 古いログを削除して20件だけ残す。
-     */
+    // =========================
+    // 古いログを削除
+    // 20件を超えた分を削除
+    // =========================
+
+    console.log(
+      "Checking old logs..."
+    );
 
     const {
       data: oldLogs,
       error: fetchError
     } = await supabase
-
       .from("chat_logs")
-
       .select("id")
-
       .eq(
         "session_id",
         session_id
       )
-
       .eq(
         "character",
         character
       )
-
       .order(
         "created_at",
         {
           ascending: false
         }
       )
-
-      .range(20, 1000);
-
+      .range(
+        20,
+        1000
+      );
 
     if (fetchError) {
 
@@ -243,25 +277,25 @@ export default async function handler(req, res) {
       oldLogs.length > 0
     ) {
 
+      console.log(
+        "Old logs to delete:",
+        oldLogs.length
+      );
+
       const ids =
         oldLogs.map(
           item => item.id
         );
 
-
       const {
         error: deleteError
       } = await supabase
-
         .from("chat_logs")
-
         .delete()
-
         .in(
           "id",
           ids
         );
-
 
       if (deleteError) {
 
@@ -270,30 +304,30 @@ export default async function handler(req, res) {
           deleteError
         );
 
+      } else {
+
+        console.log(
+          "Old logs deleted successfully."
+        );
       }
 
+    } else {
+
+      console.log(
+        "No old logs to delete."
+      );
     }
 
-
     return res.status(200).json({
-
       success: true
-
     });
-
   }
 
-
-  /*
-   * =========================
-   * その他
-   * =========================
-   */
+  console.log(
+    "ERROR: Method not allowed"
+  );
 
   return res.status(405).json({
-
     error: "Method not allowed"
-
   });
-
 }
