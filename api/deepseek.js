@@ -919,191 +919,187 @@ ${historyText}`
    * =========================
    */
 
+  console.log("DeepSeek request starting");
+
   const request =
     https.request(
       options,
       response => {
 
-        let responseData =
-          "";
+        let responseData = "";
 
-
-        response.on(
-          "data",
-          chunk => {
-
-            responseData +=
-              chunk;
-
-          }
+        console.log(
+          "DeepSeek response received:",
+          response.statusCode
         );
 
+        response.on("data", chunk => {
+          responseData += chunk;
+        });
 
-        response.on(
-          "end",
-          () => {
+        response.on("end", () => {
 
-            try {
+          clearTimeout(timeoutTimer);
 
-              const result =
-                JSON.parse(
-                  responseData
-                );
+          try {
 
+            const result =
+              JSON.parse(responseData);
 
-              if (
-                response.statusCode <
-                  200 ||
-                response.statusCode >=
-                  300
-              ) {
+            if (
+              response.statusCode < 200 ||
+              response.statusCode >= 300
+            ) {
 
-                console.error(
-                  "DeepSeek API error:",
-                  result
-                );
+              console.error(
+                "DeepSeek API error:",
+                response.statusCode,
+                result
+              );
 
-
+              if (!res.headersSent) {
                 return res
-                  .status(
-                    response.statusCode
-                  )
+                  .status(502)
                   .json({
-
                     error:
                       result.error?.message ||
                       "DeepSeek API error"
-
                   });
-
               }
 
+              return;
+            }
 
-              const reply =
+            const reply =
+              result?.choices?.[0]?.message?.content;
+
+            if (typeof reply !== "string") {
+
+              console.error(
+                "Unexpected DeepSeek response:",
                 result
-                  ?.choices?.[0]
-                  ?.message
-                  ?.content;
-
-
-              if (
-                typeof reply !==
-                "string"
-              ) {
-
-                console.error(
-                  "Unexpected DeepSeek response:",
-                  result
-                );
-
-
-                return res
-                  .status(500)
-                  .json({
-
-                    error:
-                      "DeepSeekから有効な返信が返ってきませんでした"
-
-                  });
-
-              }
-
-
-              /*
-               * ログ
-               */
-
-              console.log(
-                "DeepSeek chat:",
-                {
-
-                  character,
-
-                  historyCount:
-                    history.length,
-
-                  historicalMemoryCount:
-                    historicalMemory.length,
-
-                  relevantHistoryCount:
-                    relevantHistory.length,
-
-                  searchTokens,
-
-                  imageAttached:
-                    !!image
-
-                }
               );
 
+              if (!res.headersSent) {
+                return res
+                  .status(502)
+                  .json({
+                    error:
+                      "DeepSeekから有効な返信が返ってきませんでした"
+                  });
+              }
 
+              return;
+            }
+
+            console.log(
+              "DeepSeek chat success:",
+              {
+                character,
+                historyCount: history.length,
+                historicalMemoryCount:
+                  historicalMemory.length,
+                relevantHistoryCount:
+                  relevantHistory.length,
+                imageAttached: !!image
+              }
+            );
+
+            if (!res.headersSent) {
               return res
                 .status(200)
                 .json({
-
-                  reply:
-                    reply.trim()
-
+                  reply: reply.trim()
                 });
+            }
 
-            } catch (error) {
+          } catch (error) {
 
-              console.error(
-                "DeepSeek JSON parse error:",
-                error
-              );
+            console.error(
+              "DeepSeek response processing error:",
+              error
+            );
 
-
+            if (!res.headersSent) {
               return res
-                .status(500)
+                .status(502)
                 .json({
-
                   error:
-                    "DeepSeek APIのレスポンス解析に失敗しました"
-
+                    "DeepSeek APIの応答処理に失敗しました"
                 });
-
             }
 
           }
-        );
+
+        });
+
+        response.on("error", error => {
+
+          clearTimeout(timeoutTimer);
+
+          console.error(
+            "DeepSeek response stream error:",
+            error
+          );
+
+          if (!res.headersSent) {
+            res.status(502).json({
+              error:
+                "DeepSeekの応答受信中にエラーが発生しました"
+            });
+          }
+
+        });
 
       }
     );
 
+  /*
+   * 60秒で打ち切る。
+   * Vercelの300秒タイムアウトまで
+   * 待ち続けることを防ぐ。
+   */
 
-  request.on(
-    "error",
-    error => {
+  const timeoutTimer = setTimeout(() => {
 
-      console.error(
-        "DeepSeek request error:",
-        error
-      );
+    console.error(
+      "DeepSeek request timed out after 60 seconds"
+    );
 
+    request.destroy(
+      new Error("DeepSeek API timeout")
+    );
 
-      if (!res.headersSent) {
+  }, 60000);
 
-        res
-          .status(500)
-          .json({
+  request.on("error", error => {
 
-            error:
-              "DeepSeekへの接続に失敗しました"
+    clearTimeout(timeoutTimer);
 
-          });
+    console.error(
+      "DeepSeek request error:",
+      error.message
+    );
 
-      }
+    if (!res.headersSent) {
+
+      const isTimeout =
+        error.message ===
+        "DeepSeek API timeout";
+
+      res
+        .status(isTimeout ? 504 : 502)
+        .json({
+          error: isTimeout
+            ? "DeepSeekの応答が60秒以内に届きませんでした。時間をおいて再度お試しください。"
+            : "DeepSeekへの接続に失敗しました。"
+        });
 
     }
-  );
 
+  });
 
-  request.write(
-    requestBody
-  );
-
-
+  request.write(requestBody);
   request.end();
 
 };
