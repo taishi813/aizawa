@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AI Chat</title>
+<style>
+:root{
+  --panel:rgba(255,255,255,0.82);
+  --panel-strong:rgba(255,255,255,0.94);
+  --accent:#1976d2;
+  --accent-light:#e3f2fd;
+  --border:rgba(214,214,214,0.9);
+  --text:#222;
+  --chat-width:900px;
+  --app-height:100vh;
+  --app-top:0px;
+}
+*{
+  box-sizing:border-box;
+}
+html,
+body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+  color:var(--text);
+  background:#f5f5f5;
+}
+body{
+  overflow:hidden;
+}
+/* =========================
+   背景
+========================= */
+#bg{
+  position:fixed;
+  inset:0;
+  background-position:center;
+  background-size:cover;
+  background-repeat:no-repeat;
+  z-index:-2;
+}
+#bg::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(
+      rgba(255,255,255,0.12),
+      rgba(255,255,255,0.12)
+    );
+}
+/* =========================
+   キャラクター画像
+========================= */
+#characterImg{
+  position:fixed;
+  left:50%;
+  bottom:0;
+  transform:translateX(-50%);
+  width:auto;
+  max-width:min(70vw,900px);
+  max-height:82vh;
+  object-fit:contain;
+  object-position:bottom center;
+  /*
+   * 背景より前。
+   * パネル自体は透明なので、
+   * スマホでも白い背景に埋もれない。
+   */
+  z-index:0;
+  pointer-events:none;
+}
+/* =========================
+   メインパネル
+========================= */
+.left-panel{
+  position:relative;
+  z-index:1;
+  width:min(
+    calc(100% - 32px),
+    var(--chat-width)
+  );
+  height:calc(100vh - 32px);
+  margin:16px auto;
+  background:transparent;
+  border:1px solid rgba(0,0,0,0.08);
+  border-radius:18px;
+  box-shadow:
+    0 12px 40px rgba(0,0,0,0.12);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+/* =========================
+   キャラクター選択
+========================= */
+.character-select-area{
+  padding:14px 16px 10px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  background:rgba(255,255,255,0.88);
+}
+.character-select-area label{
+  display:block;
+  font-size:12px;
+  color:#666;
+  margin-bottom:6px;
+}
+#characterSelect{
+  width:100%;
+  height:40px;
+  padding:0 12px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:rgba(255,255,255,0.96);
+  color:var(--text);
+  font-size:15px;
+  outline:none;
+}
+#characterSelect:focus{
+  border-color:var(--accent);
+}
+/* =========================
+   折りたたみ
+========================= */
+.collapsible{
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  background:rgba(255,255,255,0.84);
+}
+.collapsible-header{
+  width:100%;
+  border:0;
+  background:transparent;
+  padding:11px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  cursor:pointer;
+  color:var(--text);
+  font-size:14px;
+  text-align:left;
+}
+.collapsible-header:hover{
+  background:rgba(247,247,247,0.85);
+}
+.toggle-mark{
+  font-size:13px;
+  color:#777;
+}
+.collapsible-content{
+  display:none;
+  padding:0 16px 14px;
+}
+.collapsible.open .collapsible-content{
+  display:block;
+}
+textarea{
+  font-family:inherit;
+}
+/* =========================
+   基本プロンプト
+========================= */
+#prompt{
+  width:100%;
+  min-height:120px;
+  resize:vertical;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:rgba(255,255,255,0.96);
+  font-size:13px;
+  line-height:1.6;
+  outline:none;
+}
+#prompt:focus{
+  border-color:var(--accent);
+}
+/* =========================
+   歴史
+========================= */
+#historyContent{
+  max-height:240px;
+  overflow-y:auto;
+}
+.history-note{
+  font-size:11px;
+  color:#777;
+  margin-bottom:8px;
+  line-height:1.5;
+}
+.history-card{
+  padding:10px;
+  margin-bottom:8px;
+  background:rgba(250,250,250,0.92);
+  border:1px solid #e5e5e5;
+  border-radius:9px;
+}
+.history-card-date{
+  font-size:11px;
+  color:#888;
+  margin-bottom:3px;
+}
+.history-card-character{
+  font-size:12px;
+  font-weight:bold;
+  color:var(--accent);
+  margin-bottom:3px;
+}
+.history-card-location{
+  font-size:11px;
+  color:#777;
+  margin-bottom:5px;
+}
+.history-card-summary{
+  font-size:12px;
+  line-height:1.5;
+}
+#historyJson{
+  display:none;
+}
+/* =========================
+   チャット
+========================= */
+#chat{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  padding:18px 16px 20px;
+  scroll-behavior:smooth;
+  background:rgba(255,255,255,0.52);
+}
+.message{
+  max-width:85%;
+  padding:10px 13px;
+  margin-bottom:12px;
+  border-radius:14px;
+  font-size:14px;
+  line-height:1.65;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.message.user{
+  margin-left:auto;
+  background:rgbavar(--accent);
+  color:#222;
+  border-bottom-right-radius:4px;
+}
+.message.ai{
+  margin-right:auto;
+  background:rgba(241,241,241,0.30);
+  color:#222;
+  border-bottom-left-radius:4px;
+}
+.message.thinking{
+  color:#777;
+  font-style:italic;
+}
+/* =========================
+   画像プレビュー
+========================= */
+#imagePreviewArea{
+  display:none;
+  padding:8px 16px;
+  border-top:1px solid var(--border);
+  background:rgba(250,250,250,0.94);
+}
+.image-preview-wrap{
+  position:relative;
+  display:inline-block;
+}
+#imagePreview{
+  display:block;
+  max-width:160px;
+  max-height:120px;
+  border-radius:10px;
+  object-fit:cover;
+}
+#removeImageBtn{
+  position:absolute;
+  top:-7px;
+  right:-7px;
+  width:24px;
+  height:24px;
+  border:0;
+  border-radius:50%;
+  background:#333;
+  color:white;
+  cursor:pointer;
+  font-size:14px;
+  line-height:24px;
+  padding:0;
+}
+/* =========================
+   入力エリア
+========================= */
+.input-area{
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
+  padding:10px 12px 12px;
+  border-top:1px solid var(--border);
+  background:rgba(255,255,255,0.95);
+  flex-shrink:0;
+}
+#input{
+  flex:1;
+  min-height:42px;
+  max-height:140px;
+  resize:none;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:rgba(255,255,255,0.98);
+  font-size:14px;
+  line-height:1.5;
+  outline:none;
+}
+#input:focus{
+  border-color:var(--accent);
+}
+.icon-btn{
+  width:42px;
+  height:42px;
+  flex-shrink:0;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:rgba(255,255,255,0.98);
+  color:#444;
+  cursor:pointer;
+  font-size:18px;
+}
+.icon-btn:hover{
+  background:#f5f5f5;
+}
+#sendBtn{
+  width:64px;
+  height:42px;
+  flex-shrink:0;
+  border:0;
+  border-radius:12px;
+  background:var(--accent);
+  color:white;
+  cursor:pointer;
+  font-size:14px;
+  font-weight:bold;
+}
+#sendBtn:hover{
+  opacity:0.9;
+}
+#sendBtn:disabled{
+  opacity:0.5;
+  cursor:default;
+}
+#imageInput{
+  display:none;
+}
+/* =========================
+   スクロールバー
+========================= */
+::-webkit-scrollbar{
+  width:7px;
+}
+::-webkit-scrollbar-thumb{
+  background:#ccc;
+  border-radius:10px;
+}
+::-webkit-scrollbar-track{
+  background:transparent;
+}
+/* =========================
+   スマホ
+========================= */
+@media(max-width:700px){
+  body{
+    overflow:hidden;
+    height:100%;
+  }
+  .left-panel{
+    position:fixed;
+    top:var(--app-top);
+    left:0;
+    width:100%;
+    height:var(--app-height);
+    min-height:0;
+    margin:0;
+    border-radius:0;
+    border:0;
+    background:transparent;
+    box-shadow:none;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    padding-bottom:env(safe-area-inset-bottom, 0px);
+  }
+  #characterImg{
+    max-width:95vw;
+    max-height:72vh;
+    bottom:0;
+  }
+  .character-select-area{
+    background:rgba(255,255,255,0.84);
+  }
+  .collapsible{
+    background:rgba(255,255,255,0.80);
+  }
+  #chat{
+    flex:1 1 0;
+    min-height:0;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    background:rgba(255,255,255,0.8);
+    padding:14px 12px 16px;
+  }
+  .message{
+    max-width:90%;
+    font-size:14px;
+  }
+  .message.ai{
+    background:rgba(255,255,255,0.8);
+  }
+  .input-area{
+    flex:0 0 auto;
+    flex-shrink:0;
+    padding:
+      8px
+      8px
+      calc(8px + env(safe-area-inset-bottom, 0px));
+    background:rgba(255,255,255,0.95);
+  }
+  #input{
+    min-width:0;
+  }
+  #sendBtn{
+    width:54px;
+  }
+}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<img id="characterImg"
+     alt=""
+     style="display:none;">
+<div class="left-panel">
+  <!-- =========================
+       キャラクター選択
+  ========================== -->
+  <div class="character-select-area">
+    <label for="characterSelect">
+      キャラクター
+    </label>
+    <select id="characterSelect">
+      <option value="manager">
+        ブランク
+      </option>
+      <option value="aizawa">
+        相澤仁美
+      </option>
+      <option value="logmake">
+        ログ生成
+      </option>
+      <option value="logmake2">
+        ログ生成2
+      </option>
+      <option value="x">
+        公式アカウント
+      </option>
+      <option value="ogura">
+        小倉優香
+      </option>
+      <option value="misato">
+        深川美怜
+      </option>
+      <option value="riho">
+        吉岡里帆
+      </option>
+      <option value="yui">
+        夏来唯
+      </option>
+      <option value="harumi">
+        根本はるみ
+      </option>
+      <option value="megumi">
+        MEGUMI
+      </option>
+      <option value="reina">
+        加藤玲菜
+      </option>
+      <option value="tomaru">
+        都丸紗也華
+      </option>
+      <option value="wacchi">
+        わちみなみ
+      </option>
+      <option value="rika">
+        泉里香
+      </option>
+      <option value="ina">
+        榎原依那
+      </option>
+    </select>
+  </div>
+  <!-- =========================
+       基本プロンプト
+  ========================== -->
+  <div class="collapsible"
+       id="promptArea">
+    <button
+      type="button"
+      class="collapsible-header"
+      id="promptToggle">
+      <span>
+        基本プロンプト
+      </span>
+      <span
+        class="toggle-mark"
+        id="promptToggleMark">
+        ＋
+      </span>
+    </button>
+    <div
+      class="collapsible-content"
+      id="promptContent">
+      <textarea
+        id="prompt"
+        placeholder="キャラクターの基本設定"></textarea>
+    </div>
+  </div>
+  <!-- =========================
+       大志との歴史
+  ========================== -->
+  <div class="collapsible"
+       id="historyArea">
+    <button
+      type="button"
+      class="collapsible-header"
+      id="historyToggle">
+      <span>
+        大志との歴史
+      </span>
+      <span
+        class="toggle-mark"
+        id="historyToggleMark">
+        ＋
+      </span>
+    </button>
+    <div
+      class="collapsible-content"
+      id="historyContent">
+      <div class="history-note">
+        history.jsonの共有履歴。
+        会話ログとは別に、重要な出来事を保存します。
+      </div>
+      <div id="historyCards"></div>
+      <textarea
+        id="historyJson"></textarea>
+    </div>
+  </div>
+  <!-- =========================
+       チャット
+  ========================== -->
+  <div id="chat"></div>
+  <!-- =========================
+       画像プレビュー
+  ========================== -->
+  <div id="imagePreviewArea">
+    <div class="image-preview-wrap">
+      <img
+        id="imagePreview"
+        alt="画像プレビュー">
+      <button
+        type="button"
+        id="removeImageBtn">
+        ×
+      </button>
+    </div>
+  </div>
+  <!-- =========================
+       入力
+  ========================== -->
+  <div class="input-area">
+    <button
+      type="button"
+      class="icon-btn"
+      id="imageBtn"
+      title="画像を添付">
+      ＋
+    </button>
+    <input
+      type="file"
+      id="imageInput"
+      accept="image/*">
+    <textarea
+      id="input"
+      placeholder="メッセージを入力..."
+      rows="1"></textarea>
+    <button
+      type="button"
+      id="sendBtn">
+      送信
+    </button>
+  </div>
+</div>
+<script>
+/* =========================================================
+   DOM
+========================================================= */
+const characterSelect =
+  document.getElementById(
+    "characterSelect"
+  );
+const characterImg =
+  document.getElementById(
+    "characterImg"
+  );
+const bg =
+  document.getElementById(
+    "bg"
+  );
+const promptArea =
+  document.getElementById(
+    "promptArea"
+  );
+const promptToggle =
+  document.getElementById(
+    "promptToggle"
+  );
+const promptToggleMark =
+  document.getElementById(
+    "promptToggleMark"
+  );
+const promptContent =
+  document.getElementById(
+    "promptContent"
+  );
+const prompt =
+  document.getElementById(
+    "prompt"
+  );
+const historyArea =
+  document.getElementById(
+    "historyArea"
+  );
+const historyToggle =
+  document.getElementById(
+    "historyToggle"
+  );
+const historyToggleMark =
+  document.getElementById(
+    "historyToggleMark"
+  );
+const historyContent =
+  document.getElementById(
+    "historyContent"
+  );
+const historyCards =
+  document.getElementById(
+    "historyCards"
+  );
+const historyJson =
+  document.getElementById(
+    "historyJson"
+  );
+const chat =
+  document.getElementById(
+    "chat"
+  );
+const input =
+  document.getElementById(
+    "input"
+  );
+const sendBtn =
+  document.getElementById(
+    "sendBtn"
+  );
+const imageBtn =
+  document.getElementById(
+    "imageBtn"
+  );
+const imageInput =
+  document.getElementById(
+    "imageInput"
+  );
+const imagePreviewArea =
+  document.getElementById(
+    "imagePreviewArea"
+  );
+const imagePreview =
+  document.getElementById(
+    "imagePreview"
+  );
+const removeImageBtn =
+  document.getElementById(
+    "removeImageBtn"
+  );
+/* =========================================================
+   モバイル画面高さ調整
+========================================================= */
+function updateAppViewport(){
+  if(window.innerWidth <= 700){
+    const viewport =
+      window.visualViewport;
+    const height =
+      viewport
+        ? viewport.height
+        : window.innerHeight;
+    const top =
+      viewport
+        ? viewport.offsetTop
+        : 0;
+    document.documentElement.style.setProperty(
+      "--app-height",
+      `${height}px`
+    );
+    document.documentElement.style.setProperty(
+      "--app-top",
+      `${top}px`
+    );
+  }
+}
+updateAppViewport();
+if(window.visualViewport){
+  window.visualViewport.addEventListener(
+    "resize",
+    updateAppViewport
+  );
+  window.visualViewport.addEventListener(
+    "scroll",
+    updateAppViewport
+  );
+}
+window.addEventListener(
+  "resize",
+  updateAppViewport
+);
+window.addEventListener(
+  "orientationchange",
+  () => {
+    setTimeout(
+      updateAppViewport,
+      100
+    );
+  }
+);
+/* =========================================================
+   設定
+========================================================= */
+const CHAT_HISTORY_API =
+  "/api/chat-history";
+const MAX_MESSAGES =
+  20;
+const SESSION_STORAGE_KEY =
+  "deepseek_chat_session_id";
+function getSessionId(){
+  let id =
+    localStorage.getItem(
+      SESSION_STORAGE_KEY
+    );
+  if(id){
+    return id;
+  }
+  if(
+    window.crypto &&
+    typeof window.crypto.randomUUID ===
+      "function"
+  ){
+    id =
+      window.crypto.randomUUID();
+  }else{
+    id =
+      Date.now().toString(36) +
+      "-" +
+      Math.random()
+        .toString(36)
+        .slice(2);
+  }
+  localStorage.setItem(
+    SESSION_STORAGE_KEY,
+    id
+  );
+  return id;
+}
+const sessionId =
+  getSessionId();
+/* =========================================================
+   現在の会話
+========================================================= */
+let history = [];
+let historicalMemory = [];
+let selectedImage = null;
+/* =========================================================
+   折りたたみ
+========================================================= */
+promptToggle.addEventListener(
+  "click",
+  () => {
+    promptArea.classList.toggle(
+      "open"
+    );
+    const open =
+      promptArea.classList.contains(
+        "open"
+      );
+    promptToggleMark.textContent =
+      open ? "−" : "＋";
+  }
+);
+historyToggle.addEventListener(
+  "click",
+  () => {
+    historyArea.classList.toggle(
+      "open"
+    );
+    const open =
+      historyArea.classList.contains(
+        "open"
+      );
+    historyToggleMark.textContent =
+      open ? "−" : "＋";
+  }
+);
+/* =========================================================
+   history.json
+========================================================= */
+function renderHistoryCards(data){
+  historyCards.innerHTML = "";
+  if(
+    !Array.isArray(data) ||
+    data.length === 0
+  ){
+    historyCards.innerHTML =
+      '<div style="font-size:12px;color:#888;">履歴はありません。</div>';
+    return;
+  }
+  const sorted =
+    [...data].sort(
+      (a,b) =>
+        String(b.date || "")
+          .localeCompare(
+            String(a.date || "")
+          )
+    );
+  sorted.forEach(item => {
+    const card =
+      document.createElement(
+        "div"
+      );
+    card.className =
+      "history-card";
+    const date =
+      document.createElement(
+        "div"
+      );
+    date.className =
+      "history-card-date";
+    date.textContent =
+      item.date || "";
+    const character =
+      document.createElement(
+        "div"
+      );
+    character.className =
+      "history-card-character";
+    character.textContent =
+      item.character || "";
+    const location =
+      document.createElement(
+        "div"
+      );
+    location.className =
+      "history-card-location";
+    if(item.location){
+      location.textContent =
+        item.location;
+    }else{
+      location.style.display =
+        "none";
+    }
+    const summary =
+      document.createElement(
+        "div"
+      );
+    summary.className =
+      "history-card-summary";
+    summary.textContent =
+      item.summary ||
+      item.event ||
+      "";
+    card.appendChild(date);
+    card.appendChild(character);
+    card.appendChild(location);
+    card.appendChild(summary);
+    historyCards.appendChild(
+      card
+    );
+  });
+}
+async function loadHistoricalMemory(){
+  try{
+    const response =
+      await fetch(
+        "history.json",
+        {
+          cache:"no-store"
+        }
+      );
+    if(!response.ok){
+      throw new Error(
+        "history.jsonの読み込みに失敗しました"
+      );
+    }
+    const data =
+      await response.json();
+    historicalMemory =
+      Array.isArray(data)
+        ? data
+        : [];
+    historyJson.value =
+      JSON.stringify(
+        historicalMemory,
+        null,
+        2
+      );
+    renderHistoryCards(
+      historicalMemory
+    );
+  }catch(error){
+    console.error(
+      "history.json ERROR:",
+      error
+    );
+    historicalMemory = [];
+    historyJson.value =
+      "[]";
+    renderHistoryCards([]);
+  }
+}
+function getHistoricalMemory(){
+  return historicalMemory;
+}
+/* =========================================================
+   キャラクター
+========================================================= */
+async function applyCharacter(){
+  const char =
+    characterSelect.value;
+  if(char === "manager"){
+    characterImg.style.display =
+      "none";
+    characterImg.removeAttribute(
+      "src"
+    );
+    bg.style.backgroundImage =
+      "none";
+    prompt.value = "";
+    return;
+  }
+  const imagePath =
+    `${char}.png`;
+  characterImg.onerror =
+    () => {
+      console.error(
+        "キャラクター画像を読み込めません:",
+        imagePath
+      );
+      characterImg.style.display =
+        "none";
+    };
+  characterImg.src =
+    imagePath;
+  characterImg.style.display =
+    "block";
+  const backgroundPath =
+    `${char}.jpg`;
+  bg.style.backgroundImage =
+    `url("${backgroundPath}")`;
+  try{
+    const response =
+      await fetch(
+        `${char}.txt`,
+        {
+          cache:"no-store"
+        }
+      );
+    if(response.ok){
+      prompt.value =
+        await response.text();
+    }else{
+      prompt.value = "";
+    }
+  }catch(error){
+    console.error(
+      "character txt ERROR:",
+      error
+    );
+    prompt.value = "";
+  }
+}
+/* =========================================================
+   Supabase経由の会話履歴取得
+========================================================= */
+async function loadChatHistory(){
+  const character =
+    characterSelect.value;
+  try{
+    const url =
+      `${CHAT_HISTORY_API}` +
+      `?session_id=${encodeURIComponent(sessionId)}` +
+      `&character=${encodeURIComponent(character)}`;
+    const response =
+      await fetch(url, {
+        method:"GET",
+        cache:"no-store"
+      });
+    if(!response.ok){
+      throw new Error(
+        `履歴取得失敗: ${response.status}`
+      );
+    }
+    const data =
+      await response.json();
+    const logs =
+      Array.isArray(data.history)
+        ? data.history
+        : [];
+    history =
+      logs
+        .filter(item => {
+          return (
+            item &&
+            (
+              item.role === "user" ||
+              item.role === "assistant"
+            ) &&
+            typeof item.content ===
+              "string"
+          );
+        })
+        .slice(-MAX_MESSAGES)
+        .map(item => ({
+          role:item.role,
+          content:item.content
+        }));
+    chat.innerHTML = "";
+    history.forEach(message => {
+      addMessage(
+        message.content,
+        message.role === "user"
+          ? "user"
+          : "ai"
+      );
+    });
+    console.log(
+      "Chat history restored:",
+      history.length
+    );
+  }catch(error){
+    console.error(
+      "CHAT HISTORY LOAD ERROR:",
+      error
+    );
+    history = [];
+  }
+}
+/* =========================================================
+   Supabaseへ会話を保存
+========================================================= */
+async function saveChatMessage(
+  role,
+  content,
+  character
+){
+  if(!content){
+    return;
+  }
+  try{
+    const response =
+      await fetch(
+        CHAT_HISTORY_API,
+        {
+          method:"POST",
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
+          body:JSON.stringify({
+            session_id:
+              sessionId,
+            character:
+              character,
+            role:
+              role,
+            content:
+              content
+          })
+        }
+      );
+    if(!response.ok){
+      throw new Error(
+        `履歴保存失敗: ${response.status}`
+      );
+    }
+  }catch(error){
+    console.error(
+      "CHAT HISTORY SAVE ERROR:",
+      error
+    );
+  }
+}
+/* =========================================================
+   メッセージ表示
+========================================================= */
+function addMessage(
+  text,
+  type
+){
+  const message =
+    document.createElement(
+      "div"
+    );
+  message.className =
+    `message ${type}`;
+  message.textContent =
+    text;
+  chat.appendChild(
+    message
+  );
+  chat.scrollTop =
+    chat.scrollHeight;
+  return message;
+}
+/* =========================================================
+   画像添付
+========================================================= */
+imageBtn.addEventListener(
+  "click",
+  () => {
+    imageInput.click();
+  }
+);
+imageInput.addEventListener(
+  "change",
+  event => {
+    const file =
+      event.target.files &&
+      event.target.files[0];
+    if(!file){
+      return;
+    }
+    const reader =
+      new FileReader();
+    reader.onload =
+      () => {
+        selectedImage =
+          reader.result;
+        imagePreview.src =
+          selectedImage;
+        imagePreviewArea.style.display =
+          "block";
+      };
+    reader.readAsDataURL(
+      file
+    );
+  }
+);
+function removeSelectedImage(){
+  selectedImage = null;
+  imagePreview.src = "";
+  imagePreviewArea.style.display =
+    "none";
+  imageInput.value = "";
+}
+removeImageBtn.addEventListener(
+  "click",
+  () => {
+    removeSelectedImage();
+  }
+);
+/* =========================================================
+   送信
+========================================================= */
+async function send(){
+  const text =
+    input.value.trim();
+  if(
+    !text &&
+    !selectedImage
+  ){
+    return;
+  }
+  const currentCharacter =
+    characterSelect.value;
+  const userDisplayText =
+    text ||
+    "📷 画像を送信";
+  addMessage(
+    userDisplayText,
+    "user"
+  );
+  history.push({
+    role:"user",
+    content:userDisplayText
+  });
+  history =
+    history.slice(-MAX_MESSAGES);
+  void saveChatMessage(
+    "user",
+    userDisplayText,
+    currentCharacter
+  );
+  input.value = "";
+  const imageToSend =
+    selectedImage;
+  removeSelectedImage();
+  const thinking =
+    addMessage(
+      "考え中…",
+      "ai thinking"
+    );
+  sendBtn.disabled =
+    true;
+  try{
+    const response =
+      await fetch(
+        "/api/deepseek",
+        {
+          method:"POST",
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
+          body:JSON.stringify({
+            history:
+              history,
+            character:
+              currentCharacter,
+            prompt:
+              prompt.value.trim(),
+            historicalMemory:
+              getHistoricalMemory(),
+            image:
+              imageToSend || ""
+          })
+        }
+      );
+    let data = null;
+    try{
+      data =
+        await response.json();
+    }catch(error){
+      throw new Error(
+        "APIからJSONを取得できませんでした"
+      );
+    }
+    if(!response.ok){
+      throw new Error(
+        data &&
+        data.error
+          ? data.error
+          : `HTTP ${response.status}`
+      );
+    }
+    if(
+      !data ||
+      typeof data.reply !==
+        "string"
+    ){
+      throw new Error(
+        "AIから有効な返信が返ってきませんでした"
+      );
+    }
+    thinking.remove();
+    if(
+      characterSelect.value !==
+      currentCharacter
+    ){
+      void saveChatMessage(
+        "assistant",
+        data.reply.trim(),
+        currentCharacter
+      );
+      return;
+    }
+    addMessage(
+      data.reply.trim(),
+      "ai"
+    );
+    history.push({
+      role:"assistant",
+      content:data.reply.trim()
+    });
+    history =
+      history.slice(-MAX_MESSAGES);
+    void saveChatMessage(
+      "assistant",
+      data.reply.trim(),
+      currentCharacter
+    );
+  }catch(error){
+    console.error(
+      "SEND ERROR:",
+      error
+    );
+    thinking.remove();
+    addMessage(
+      `エラーが発生しました。\n${error.message}`,
+      "ai"
+    );
+  }finally{
+    sendBtn.disabled =
+      false;
+    input.focus();
+  }
+}
+/* =========================================================
+   Enterで送信
+========================================================= */
+input.addEventListener(
+  "keydown",
+  event => {
+    if(
+      event.key === "Enter" &&
+      !event.shiftKey &&
+      !event.isComposing
+    ){
+      event.preventDefault();
+      send();
+    }
+  }
+);
+/* =========================================================
+   送信ボタン
+========================================================= */
+sendBtn.addEventListener(
+  "click",
+  send
+);
+/* =========================================================
+   キャラクター変更
+========================================================= */
+characterSelect.addEventListener(
+  "change",
+  async () => {
+    history = [];
+    chat.innerHTML = "";
+    removeSelectedImage();
+    await applyCharacter();
+    await loadChatHistory();
+  }
+);
+/* =========================================================
+   初期化
+========================================================= */
+async function initialize(){
+  updateAppViewport();
+  await applyCharacter();
+  await loadHistoricalMemory();
+  await loadChatHistory();
+  input.focus();
+}
+initialize();
+</script>
+</body>
+</html>
